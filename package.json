@@ -1,7 +1,7 @@
 {
-  "name": "learnox-chat-app",
+  "name": "learnox-chat-pro",
   "version": "1.0.0",
-  "description": "Professional Chat Platform",
+  "description": "Professional Chat App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -12,9 +12,9 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
     "cors": "^2.8.5",
-    "socket.io": "^4.5.4"
+    "socket.io": "^4.6.1"
   },
   "engines": {
-    "node": ">=14.x"
+    "node": ">=16.x"
   }
 }
