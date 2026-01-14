@@ -57,6 +57,37 @@
             .back-btn { display: block; margin-right: 10px; cursor: pointer; }
         }
         @media (min-width: 769px) { .back-btn { display: none; } }
+
+        /* Additional Styles from new.html */
+        .search-box { padding: 15px; }
+        .search-container { position: relative; }
+        .search-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #6c757d; }
+        .search-container input { width: 100%; padding: 12px 12px 12px 45px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 14px; }
+        
+        .badge { background: #dc3545; color: white; font-size: 12px; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
+        .online-status { width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        
+        .request-actions { display: flex; gap: 10px; margin-top: 8px; }
+        .request-btn { padding: 6px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .request-btn.accept { background: #28a745; color: white; }
+        .request-btn.reject { background: #dc3545; color: white; }
+        
+        .unread-count { background: #667eea; color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+        
+        .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
+        .loading-spinner { width: 40px; height: 40px; border: 3px solid #f8f9fa; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; }
+        .empty-state i { font-size: 60px; color: #dee2e6; margin-bottom: 20px; }
+        .empty-state h4 { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #495057; }
+        .empty-state p { font-size: 14px; line-height: 1.5; max-width: 300px; margin: 0 auto; }
+        
+        .typing-indicator { color: #667eea; font-style: italic; font-size: 0.9rem; margin-left: 10px; }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -82,26 +113,52 @@
             <div class="user-profile">
                 <div>
                     <h3 id="my-name">User</h3>
-                    <small>Online</small>
+                    <small id="user-status">Online</small>
                 </div>
                 <div class="logout-btn" onclick="logout()">Logout <i class="fas fa-sign-out-alt"></i></div>
             </div>
+            
+            <!-- Navigation Tabs -->
             <div class="nav-tabs">
-                <div class="nav-tab active" onclick="loadTab('chats')">Chats</div>
-                <div class="nav-tab" onclick="loadTab('search')">Find People</div>
+                <div class="nav-tab active" data-tab="friends">Friends</div>
+                <div class="nav-tab" data-tab="chats">Chats <span class="badge" id="unread-chats-count"></span></div>
+                <div class="nav-tab" data-tab="requests">Requests <span class="badge" id="pending-requests-count"></span></div>
+                <div class="nav-tab" data-tab="find">Find Users</div>
             </div>
-            <div class="list-container" id="list-container">
+            
+            <!-- Search Box -->
+            <div class="search-box">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="global-search" placeholder="Search...">
                 </div>
+            </div>
+            
+            <!-- Lists Container -->
+            <div class="list-container" id="list-container">
+                <div class="loading" id="chats-loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
         </div>
 
         <div class="chat-area" id="chat-area">
             <div class="chat-header">
                 <i class="fas fa-arrow-left back-btn" onclick="closeChat()"></i>
                 <div class="avatar"><i class="fas fa-user"></i></div>
-                <h3 id="chat-header-name">Select a user</h3>
+                <div>
+                    <h3 id="chat-header-name">Select a user</h3>
+                    <small id="chat-status">Select a conversation to start messaging</small>
+                    <span class="typing-indicator" id="typing-indicator" style="display: none;">typing...</span>
+                </div>
             </div>
             <div class="messages" id="messages">
+                <div class="empty-state" id="chat-empty-state">
+                    <i class="fas fa-comments"></i>
+                    <h4>No messages yet</h4>
+                    <p>Start a conversation by sending a message</p>
                 </div>
+            </div>
             <div class="input-area">
                 <input type="text" id="msg-input" placeholder="Type a message...">
                 <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
@@ -115,7 +172,12 @@
         let token = localStorage.getItem('token');
         let user = JSON.parse(localStorage.getItem('user'));
         let currentChatId = null;
+        let currentChatUser = null;
         let isRegister = false;
+        let friends = [];
+        let pendingRequests = [];
+        let typingTimeout = null;
+        let activeTab = 'friends';
 
         // Auto Login Check
         if (token && user) {
@@ -132,6 +194,7 @@
             document.getElementById('auth-title').innerText = isRegister ? 'Create Account' : 'Login to Learnox';
             document.getElementById('submit-btn').innerText = isRegister ? 'Register' : 'Login';
             switchAuth.innerText = isRegister ? 'Already have an account? Login' : "Don't have an account? Register";
+            document.getElementById('error-msg').innerText = '';
         };
 
         authForm.onsubmit = async (e) => {
@@ -170,64 +233,481 @@
             document.getElementById('app-box').style.display = 'flex';
             document.getElementById('my-name').innerText = user.name;
             socket.emit('join_user', user.id);
-            loadTab('chats');
+            socket.emit('update_status', { userId: user.id, status: 'online' });
+            loadTab('friends');
+            
+            // Setup socket listeners
+            setupSocketListeners();
         }
 
-        // --- APP LOGIC ---
-        async function loadTab(tab) {
+        // Setup Socket Listeners
+        function setupSocketListeners() {
+            socket.on('new_message', (msg) => {
+                if (currentChatId === msg.chatId) {
+                    addMessageToUI(msg);
+                }
+                // Update unread counts
+                if (activeTab === 'chats' || activeTab === 'friends') {
+                    loadTab(activeTab);
+                }
+            });
+
+            socket.on('friend_request_received', (request) => {
+                showNotification('Friend Request', `${request.senderName} sent you a friend request`);
+                if (activeTab === 'requests') {
+                    loadFriendRequests();
+                }
+                updateRequestsCount();
+            });
+
+            socket.on('friend_request_accepted', (data) => {
+                showNotification('Friend Request Accepted', `${data.acceptorName} accepted your friend request`);
+                if (activeTab === 'friends') {
+                    loadFriends();
+                }
+            });
+
+            socket.on('user_status_changed', (data) => {
+                if (currentChatUser && currentChatUser.id === data.userId) {
+                    updateChatStatus(data.status);
+                }
+                // Refresh current tab if needed
+                if (activeTab === 'friends' || activeTab === 'chats') {
+                    loadTab(activeTab);
+                }
+            });
+
+            socket.on('typing', (data) => {
+                if (currentChatId === data.chatId && data.userId !== user.id) {
+                    document.getElementById('typing-indicator').style.display = 'inline';
+                    setTimeout(() => {
+                        document.getElementById('typing-indicator').style.display = 'none';
+                    }, 2000);
+                }
+            });
+        }
+
+        // --- TAB MANAGEMENT ---
+        function switchTab(tabName) {
+            activeTab = tabName;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            event ? event.target.classList.add('active') : document.querySelector('.nav-tab').classList.add('active');
-            
-            const endpoint = tab === 'search' ? '/users/search' : '/chats';
-            const res = await fetch(API_URL + endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            
+            event.target.classList.add('active');
+            loadTab(tabName);
+        }
+
+        async function loadTab(tab) {
             const list = document.getElementById('list-container');
-            list.innerHTML = '';
+            list.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
             
-            data.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <div>
-                        <h4>${item.name}</h4>
-                        <small>${item.email || 'Click to chat'}</small>
+            try {
+                switch(tab) {
+                    case 'friends':
+                        await loadFriends();
+                        break;
+                    case 'chats':
+                        await loadChats();
+                        break;
+                    case 'requests':
+                        await loadFriendRequests();
+                        break;
+                    case 'find':
+                        await loadFindUsers();
+                        break;
+                }
+            } catch (error) {
+                console.error('Error loading tab:', error);
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h4>Error loading data</h4>
+                        <p>Please try again later</p>
                     </div>
                 `;
-                // If searching, clicking creates a chat. If in chat list, clicking opens chat.
-                const targetUserId = item.userId || item._id; 
-                div.onclick = () => openChat(targetUserId, item.name);
-                list.appendChild(div);
-            });
+            }
         }
 
-        async function openChat(targetUserId, name) {
-            // Get Chat ID
-            const res = await fetch(API_URL + '/chats', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ userId: targetUserId })
-            });
-            const data = await res.json();
-            currentChatId = data._id; // Format: id_id
+        // Load Friends
+        async function loadFriends() {
+            try {
+                const res = await fetch(API_URL + '/friends', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const friendsData = await res.json();
+                friends = friendsData;
+                
+                const list = document.getElementById('list-container');
+                
+                if (!friends || friends.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-friends"></i>
+                            <h4>No friends yet</h4>
+                            <p>Add friends to start chatting</p>
+                        </div>
+                    `;
+                    return;
+                }
 
+                let html = '';
+                for (const friend of friends) {
+                    // Get unread count for each friend
+                    const unreadRes = await fetch(`${API_URL}/chats/unread/${friend.id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const unreadData = await unreadRes.json();
+                    const unreadCount = unreadData.count || 0;
+
+                    html += `
+                        <div class="list-item" data-user-id="${friend.id}">
+                            <div class="avatar"><i class="fas fa-user"></i></div>
+                            <div style="flex: 1;">
+                                <h4>${friend.name}</h4>
+                                <small>${friend.email} ${friend.status === 'online' ? '<span class="online-status"></span>Online' : 'Offline'}</small>
+                            </div>
+                            ${unreadCount > 0 ? `<div class="unread-count">${unreadCount}</div>` : ''}
+                        </div>
+                    `;
+                }
+                
+                list.innerHTML = html;
+                
+                // Add click handlers
+                document.querySelectorAll('.list-item[data-user-id]').forEach(item => {
+                    item.addEventListener('click', async () => {
+                        const userId = item.dataset.userId;
+                        const friend = friends.find(f => f.id === userId);
+                        await openChat(userId, friend.name);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading friends:', error);
+            }
+        }
+
+        // Load Chats
+        async function loadChats() {
+            try {
+                const res = await fetch(API_URL + '/chats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const chats = await res.json();
+                
+                const list = document.getElementById('list-container');
+                
+                if (!chats || chats.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-comments"></i>
+                            <h4>No conversations yet</h4>
+                            <p>Start chatting with your friends</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                let totalUnread = 0;
+                
+                for (const chat of chats) {
+                    const otherUser = chat.participants.find(p => p._id !== user.id);
+                    const unreadCount = chat.unreadCount || 0;
+                    totalUnread += unreadCount;
+                    
+                    html += `
+                        <div class="list-item" data-chat-id="${chat._id}" data-user-id="${otherUser._id}">
+                            <div class="avatar"><i class="fas fa-user"></i></div>
+                            <div style="flex: 1;">
+                                <h4>${otherUser.name}</h4>
+                                <small>${chat.lastMessage ? chat.lastMessage.text : 'No messages yet'}</small>
+                            </div>
+                            ${unreadCount > 0 ? `<div class="unread-count">${unreadCount}</div>` : ''}
+                        </div>
+                    `;
+                }
+                
+                list.innerHTML = html;
+                document.getElementById('unread-chats-count').textContent = totalUnread > 0 ? totalUnread : '';
+                
+                // Add click handlers
+                document.querySelectorAll('.list-item[data-chat-id]').forEach(item => {
+                    item.addEventListener('click', async () => {
+                        const chatId = item.dataset.chatId;
+                        const userId = item.dataset.userId;
+                        const otherUser = chats.find(c => c._id === chatId)?.participants.find(p => p._id === userId);
+                        await openChatWithExisting(userId, otherUser?.name || 'User', chatId);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading chats:', error);
+            }
+        }
+
+        // Load Friend Requests
+        async function loadFriendRequests() {
+            try {
+                const res = await fetch(API_URL + '/friend-requests/received', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const requests = await res.json();
+                pendingRequests = requests;
+                
+                const list = document.getElementById('list-container');
+                
+                if (!requests || requests.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-plus"></i>
+                            <h4>No pending requests</h4>
+                            <p>When someone sends you a request, it will appear here</p>
+                        </div>
+                    `;
+                    updateRequestsCount();
+                    return;
+                }
+
+                let html = '';
+                for (const request of requests) {
+                    html += `
+                        <div class="list-item" data-request-id="${request._id}">
+                            <div class="avatar"><i class="fas fa-user"></i></div>
+                            <div style="flex: 1;">
+                                <h4>${request.sender.name}</h4>
+                                <small>${request.sender.email}</small>
+                                <div class="request-actions">
+                                    <button class="request-btn accept" data-action="accept">Accept</button>
+                                    <button class="request-btn reject" data-action="reject">Reject</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                list.innerHTML = html;
+                updateRequestsCount();
+                
+                // Add click handlers
+                document.querySelectorAll('.request-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const requestId = btn.closest('.list-item').dataset.requestId;
+                        const action = btn.dataset.action;
+                        handleFriendRequest(requestId, action);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading friend requests:', error);
+            }
+        }
+
+        // Load Find Users
+        async function loadFindUsers() {
+            try {
+                const res = await fetch(API_URL + '/users/search', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await res.json();
+                
+                const list = document.getElementById('list-container');
+                
+                if (!users || users.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h4>No users found</h4>
+                            <p>Try searching for users by email</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Get current friends for comparison
+                const friendsRes = await fetch(API_URL + '/friends', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const currentFriends = await friendsRes.json();
+                const friendIds = currentFriends.map(f => f.id);
+                
+                // Get pending requests
+                const requestsRes = await fetch(API_URL + '/friend-requests/sent', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const sentRequests = await requestsRes.json();
+                const requestedIds = sentRequests.map(r => r.receiver?._id || r.receiver);
+
+                let html = '';
+                for (const userItem of users) {
+                    if (userItem._id === user.id) continue;
+                    
+                    const isFriend = friendIds.includes(userItem._id);
+                    const isRequestSent = requestedIds.includes(userItem._id);
+                    
+                    html += `
+                        <div class="list-item" data-user-id="${userItem._id}">
+                            <div class="avatar"><i class="fas fa-user"></i></div>
+                            <div style="flex: 1;">
+                                <h4>${userItem.name}</h4>
+                                <small>${userItem.email}</small>
+                                <div class="request-actions">
+                                    ${isFriend ? 
+                                        `<button class="request-btn" style="background: #6c757d;" disabled>Friends</button>` :
+                                        isRequestSent ?
+                                        `<button class="request-btn" style="background: #ffc107; color: #212529;" disabled>Request Sent</button>` :
+                                        `<button class="request-btn accept send-request">Add Friend</button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                list.innerHTML = html;
+                
+                // Add click handlers
+                document.querySelectorAll('.send-request').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const userId = btn.closest('.list-item').dataset.userId;
+                        sendFriendRequest(userId);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading find users:', error);
+            }
+        }
+
+        // Handle Search
+        document.getElementById('global-search').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const items = document.querySelectorAll('.list-item');
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+
+        // --- FRIEND REQUEST FUNCTIONS ---
+        async function sendFriendRequest(receiverId) {
+            try {
+                const res = await fetch(API_URL + '/friend-requests/send', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ receiverId })
+                });
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                showNotification('Success', 'Friend request sent successfully');
+                loadFindUsers();
+            } catch (error) {
+                console.error('Error sending friend request:', error);
+                showNotification('Error', error.message || 'Failed to send friend request');
+            }
+        }
+
+        async function handleFriendRequest(requestId, action) {
+            try {
+                const res = await fetch(`${API_URL}/friend-requests/${requestId}/${action}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                showNotification('Success', `Friend request ${action}ed`);
+                
+                // Refresh appropriate lists
+                loadFriendRequests();
+                if (action === 'accept') {
+                    loadFriends();
+                }
+            } catch (error) {
+                console.error('Error handling friend request:', error);
+                showNotification('Error', `Failed to ${action} friend request`);
+            }
+        }
+
+        function updateRequestsCount() {
+            const count = pendingRequests.length;
+            document.getElementById('pending-requests-count').textContent = count > 0 ? count : '';
+        }
+
+        // --- CHAT FUNCTIONS ---
+        async function openChat(targetUserId, name) {
+            try {
+                // Create or get chat
+                const res = await fetch(API_URL + '/chats', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ userId: targetUserId })
+                });
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                currentChatId = data._id;
+                currentChatUser = { id: targetUserId, name: name };
+                
+                document.getElementById('chat-header-name').innerText = name;
+                document.getElementById('chat-status').innerHTML = `<span class="online-status"></span>Online`;
+                document.getElementById('chat-area').classList.add('active');
+                document.getElementById('chat-empty-state').style.display = 'none';
+                
+                socket.emit('join_chat', currentChatId);
+                loadMessages();
+                
+                // Mark messages as read
+                await markMessagesAsRead();
+            } catch (error) {
+                console.error('Error opening chat:', error);
+                showNotification('Error', 'Failed to open chat');
+            }
+        }
+
+        async function openChatWithExisting(targetUserId, name, chatId) {
+            currentChatId = chatId;
+            currentChatUser = { id: targetUserId, name: name };
+            
             document.getElementById('chat-header-name').innerText = name;
-            document.getElementById('chat-area').classList.add('active'); // For mobile
+            document.getElementById('chat-status').innerHTML = `<span class="online-status"></span>Online`;
+            document.getElementById('chat-area').classList.add('active');
+            document.getElementById('chat-empty-state').style.display = 'none';
             
             socket.emit('join_chat', currentChatId);
             loadMessages();
+            
+            // Mark messages as read
+            await markMessagesAsRead();
         }
 
         async function loadMessages() {
-            const res = await fetch(`${API_URL}/chats/${currentChatId}/messages`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const msgs = await res.json();
-            const container = document.getElementById('messages');
-            container.innerHTML = '';
-            msgs.forEach(addMessageToUI);
-            scrollToBottom();
+            try {
+                const res = await fetch(`${API_URL}/chats/${currentChatId}/messages`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const msgs = await res.json();
+                
+                const container = document.getElementById('messages');
+                container.innerHTML = '';
+                
+                if (msgs.length === 0) {
+                    document.getElementById('chat-empty-state').style.display = 'block';
+                    return;
+                }
+                
+                msgs.forEach(addMessageToUI);
+                scrollToBottom();
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
         }
 
         function addMessageToUI(msg) {
@@ -241,16 +721,75 @@
 
         async function sendMessage() {
             const input = document.getElementById('msg-input');
-            const text = input.value;
+            const text = input.value.trim();
+            
             if (!text || !currentChatId) return;
 
-            await fetch(API_URL + '/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ chatId: currentChatId, text })
+            // Send typing indicator
+            socket.emit('typing', { 
+                chatId: currentChatId, 
+                userId: user.id 
             });
-            input.value = '';
+
+            try {
+                await fetch(API_URL + '/messages', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ chatId: currentChatId, text })
+                });
+                input.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showNotification('Error', 'Failed to send message');
+            }
         }
+
+        async function markMessagesAsRead() {
+            try {
+                await fetch(`${API_URL}/chats/${currentChatId}/read`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                // Update unread counts
+                if (activeTab === 'chats' || activeTab === 'friends') {
+                    loadTab(activeTab);
+                }
+            } catch (error) {
+                console.error('Error marking messages as read:', error);
+            }
+        }
+
+        function updateChatStatus(status) {
+            const statusEl = document.getElementById('chat-status');
+            if (status === 'online') {
+                statusEl.innerHTML = `<span class="online-status"></span>Online`;
+            } else {
+                statusEl.innerHTML = `Offline`;
+            }
+        }
+
+        // Handle typing
+        document.getElementById('msg-input').addEventListener('input', function() {
+            if (!currentChatId) return;
+            
+            // Clear previous timeout
+            if (typingTimeout) clearTimeout(typingTimeout);
+            
+            // Send typing indicator
+            socket.emit('typing', { 
+                chatId: currentChatId, 
+                userId: user.id 
+            });
+            
+            // Set timeout to stop typing indicator
+            typingTimeout = setTimeout(() => {
+                // Typing stopped
+            }, 1000);
+        });
 
         function scrollToBottom() {
             const d = document.getElementById('messages');
@@ -259,13 +798,64 @@
 
         function closeChat() {
             document.getElementById('chat-area').classList.remove('active');
+            currentChatId = null;
+            currentChatUser = null;
+            document.getElementById('typing-indicator').style.display = 'none';
         }
 
-        // Live Message Handling
-        socket.on('new_message', (msg) => {
-            if (currentChatId === msg.chatId) {
-                addMessageToUI(msg);
+        // --- NOTIFICATION FUNCTION ---
+        function showNotification(title, message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                border-left: 4px solid #667eea;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            notification.innerHTML = `
+                <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${title}</div>
+                <div style="color: #666; font-size: 0.9rem;">${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Add CSS for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
             }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Update navigation tabs to use new function
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                switchTab(tabName);
+            });
         });
     </script>
 </body>
