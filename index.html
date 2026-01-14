@@ -3,134 +3,1238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learnox - Pro Chat</title>
+    <title>Learnox Pro - Secure Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/emoji-picker.min.css">
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/emoji-picker.min.js"></script>
     <style>
-        /* Professional CSS */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        /* Professional CSS with improved design */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', 'Roboto', sans-serif; 
+        }
+        
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+        }
         
         /* Auth Styles */
-        .auth-container { background: white; width: 400px; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .auth-header { text-align: center; margin-bottom: 2rem; color: #333; }
-        .form-control { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; outline: none; transition: 0.3s; }
-        .form-control:focus { border-color: #667eea; }
-        .btn { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn:hover { background: #764ba2; }
-        .switch-text { text-align: center; margin-top: 15px; font-size: 0.9rem; cursor: pointer; color: #667eea; }
-        .hidden { display: none; }
-
-        /* App Styles */
-        .app-container { display: none; width: 95vw; height: 90vh; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; display: flex; }
-        .sidebar { width: 300px; background: #f7f7f9; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
-        .user-profile { padding: 20px; background: #667eea; color: white; display: flex; justify-content: space-between; align-items: center; }
-        .logout-btn { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
-        
-        .nav-tabs { display: flex; background: #fff; padding: 10px; border-bottom: 1px solid #eee; }
-        .nav-tab { flex: 1; text-align: center; padding: 8px; cursor: pointer; color: #777; font-weight: 600; }
-        .nav-tab.active { color: #667eea; border-bottom: 2px solid #667eea; }
-
-        .list-container { flex: 1; overflow-y: auto; }
-        .list-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
-        .list-item:hover { background: #eef2f7; }
-        .avatar { width: 40px; height: 40px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #555; }
-
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: #fff; }
-        .chat-header { padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
-        .messages { flex: 1; padding: 20px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 10px; }
-        
-        .msg { max-width: 70%; padding: 10px 15px; border-radius: 15px; font-size: 0.95rem; }
-        .msg.sent { align-self: flex-end; background: #667eea; color: white; border-bottom-right-radius: 2px; }
-        .msg.received { align-self: flex-start; background: #e0e0e0; color: #333; border-bottom-left-radius: 2px; }
-        
-        .input-area { padding: 15px; border-top: 1px solid #eee; display: flex; gap: 10px; background: white; }
-        .input-area input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        .send-btn { width: 45px; height: 45px; background: #667eea; color: white; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .app-container { width: 100vw; height: 100vh; border-radius: 0; }
-            .sidebar { width: 100%; }
-            .chat-area { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
-            .chat-area.active { display: flex; }
-            .back-btn { display: block; margin-right: 10px; cursor: pointer; }
+        .auth-container { 
+            background: white; 
+            width: 420px; 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25); 
+            animation: slideUp 0.5s ease;
         }
-        @media (min-width: 769px) { .back-btn { display: none; } }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .auth-header { 
+            text-align: center; 
+            margin-bottom: 2rem; 
+            color: #333; 
+        }
+        
+        .auth-logo {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 3.5rem;
+        }
+        
+        .auth-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .auth-subtitle {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 14px 16px; 
+            margin-bottom: 15px; 
+            border: 2px solid #e8e8e8; 
+            border-radius: 12px; 
+            outline: none; 
+            transition: all 0.3s; 
+            font-size: 15px;
+        }
+        
+        .form-control:focus { 
+            border-color: #667eea; 
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn { 
+            width: 100%; 
+            padding: 14px; 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 16px;
+            transition: all 0.3s; 
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:hover { 
+            background: #5a6fd8; 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .switch-text { 
+            text-align: center; 
+            margin-top: 20px; 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            color: #667eea;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .switch-text:hover {
+            color: #764ba2;
+        }
+        
+        .hidden { display: none; }
+        
+        /* Profile Picture Upload */
+        .profile-upload {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .profile-img-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #f0f0f0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .profile-img-container:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+        
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .profile-img-container:hover .profile-overlay {
+            opacity: 1;
+        }
+        
+        #profile-pic-input {
+            display: none;
+        }
 
-        /* Additional Styles from new.html */
-        .search-box { padding: 15px; }
-        .search-container { position: relative; }
-        .search-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #6c757d; }
-        .search-container input { width: 100%; padding: 12px 12px 12px 45px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 14px; }
+        /* App Container */
+        .app-container { 
+            display: none; 
+            width: 95vw; 
+            height: 92vh; 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); 
+            overflow: hidden; 
+            display: flex; 
+        }
         
-        .badge { background: #dc3545; color: white; font-size: 12px; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
-        .online-status { width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        /* Sidebar */
+        .sidebar { 
+            width: 350px; 
+            background: #ffffff; 
+            border-right: 1px solid #f0f0f0; 
+            display: flex; 
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
         
-        .request-actions { display: flex; gap: 10px; margin-top: 8px; }
-        .request-btn { padding: 6px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .request-btn.accept { background: #28a745; color: white; }
-        .request-btn.reject { background: #dc3545; color: white; }
+        .user-profile { 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
         
-        .unread-count { background: #667eea; color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+        .user-profile::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 1%);
+            background-size: 20px 20px;
+            opacity: 0.3;
+        }
         
-        .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
-        .loading-spinner { width: 40px; height: 40px; border: 3px solid #f8f9fa; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
         
-        .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; }
-        .empty-state i { font-size: 60px; color: #dee2e6; margin-bottom: 20px; }
-        .empty-state h4 { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #495057; }
-        .empty-state p { font-size: 14px; line-height: 1.5; max-width: 300px; margin: 0 auto; }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
         
-        .typing-indicator { color: #667eea; font-style: italic; font-size: 0.9rem; margin-left: 10px; }
+        .user-avatar:hover {
+            transform: scale(1.1);
+        }
+        
+        .user-details h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .user-details small {
+            opacity: 0.9;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .logout-btn { 
+            background: rgba(255,255,255,0.2); 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-size: 0.9rem; 
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .logout-btn:hover { 
+            background: rgba(255,255,255,0.3); 
+            transform: translateX(3px);
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs { 
+            display: flex; 
+            background: #fff; 
+            padding: 0 15px;
+            border-bottom: 1px solid #f0f0f0; 
+            position: relative;
+        }
+        
+        .nav-tab { 
+            flex: 1; 
+            text-align: center; 
+            padding: 16px 8px; 
+            cursor: pointer; 
+            color: #777; 
+            font-weight: 600; 
+            font-size: 0.95rem;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab:hover { 
+            color: #667eea;
+        }
+        
+        .nav-tab.active { 
+            color: #667eea; 
+        }
+        
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 3px;
+            background: #667eea;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .nav-badge {
+            background: #ff4757;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            display: inline-block;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        
+        /* Search Box */
+        .search-box { 
+            padding: 15px; 
+            background: #fff;
+        }
+        
+        .search-container { 
+            position: relative; 
+        }
+        
+        .search-container i { 
+            position: absolute; 
+            left: 15px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: #9e9e9e; 
+            font-size: 1rem;
+        }
+        
+        .search-container input { 
+            width: 100%; 
+            padding: 14px 14px 14px 45px; 
+            border: 2px solid #f0f0f0; 
+            border-radius: 12px; 
+            font-size: 15px; 
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+        
+        .search-container input:focus { 
+            border-color: #667eea; 
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+        
+        /* List Container */
+        .list-container { 
+            flex: 1; 
+            overflow-y: auto; 
+            background: #fff;
+        }
+        
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        .list-item { 
+            padding: 16px 20px; 
+            border-bottom: 1px solid #f5f5f5; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            transition: all 0.3s; 
+            position: relative;
+        }
+        
+        .list-item:hover { 
+            background: #f8f9ff; 
+            transform: translateX(5px);
+        }
+        
+        .list-item.active {
+            background: #f0f2ff;
+            border-left: 4px solid #667eea;
+        }
+        
+        .avatar { 
+            width: 48px; 
+            height: 48px; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .list-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .list-item-content h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .list-item-content small {
+            color: #666;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .online-status { 
+            width: 8px; 
+            height: 8px; 
+            background: #4CAF50; 
+            border-radius: 50%; 
+            display: inline-block; 
+            flex-shrink: 0;
+        }
+        
+        .offline-status {
+            width: 8px;
+            height: 8px;
+            background: #9e9e9e;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        
+        .list-item-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .list-item-time {
+            font-size: 0.8rem;
+            color: #999;
+            white-space: nowrap;
+        }
+        
+        .unread-count { 
+            background: #667eea; 
+            color: white; 
+            font-size: 12px; 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            min-width: 20px; 
+            text-align: center; 
+            font-weight: 600;
+        }
+        
+        /* Chat Area */
+        .chat-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: #fff; 
+            position: relative;
+        }
+        
+        .chat-header { 
+            padding: 18px 20px; 
+            border-bottom: 1px solid #f0f0f0; 
+            font-weight: bold; 
+            font-size: 1.1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            background: white;
+            z-index: 5;
+            position: relative;
+        }
+        
+        .back-btn { 
+            display: none; 
+            cursor: pointer; 
+            color: #667eea;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #f0f2ff;
+        }
+        
+        .chat-header-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .chat-header-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chat-status {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .typing-indicator { 
+            color: #667eea; 
+            font-style: italic; 
+            font-size: 0.85rem; 
+            font-weight: normal;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .chat-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #f5f5f5;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .chat-action-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Messages Container */
+        .messages { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .messages::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 4px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.7);
+        }
+        
+        .chat-bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            z-index: -1;
+        }
+        
+        /* Message Styles */
+        .msg { 
+            max-width: 70%; 
+            padding: 12px 16px; 
+            border-radius: 18px; 
+            font-size: 0.95rem; 
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+            animation: messageAppear 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .msg.sent { 
+            align-self: flex-end; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; 
+            border-bottom-right-radius: 4px;
+        }
+        
+        .msg.received { 
+            align-self: flex-start; 
+            background: white; 
+            color: #333; 
+            border-bottom-left-radius: 4px;
+            border: 1px solid #f0f0f0;
+        }
+        
+        .msg-edited {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .msg.received .msg-edited {
+            color: #999;
+        }
+        
+        .msg-meta {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 0.75rem;
+        }
+        
+        .msg-time {
+            opacity: 0.8;
+        }
+        
+        .msg-status {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .status-icon {
+            font-size: 0.8rem;
+        }
+        
+        .status-sent { color: rgba(255,255,255,0.7); }
+        .status-delivered { color: rgba(255,255,255,0.9); }
+        .status-read { color: #4CAF50; }
+        
+        .msg.received .status-sent,
+        .msg.received .status-delivered,
+        .msg.received .status-read {
+            color: #999;
+        }
+        
+        /* Message Actions */
+        .msg-actions {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: -40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+        }
+        
+        .msg:hover .msg-actions {
+            display: flex;
+        }
+        
+        .msg-action-btn {
+            padding: 10px 15px;
+            border: none;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .msg-action-btn:hover {
+            background: #f5f5f5;
+            color: #667eea;
+        }
+        
+        .msg-action-btn.delete:hover {
+            color: #ff4757;
+        }
+        
+        /* Input Area */
+        .input-area { 
+            padding: 20px; 
+            border-top: 1px solid #f0f0f0; 
+            display: flex; 
+            gap: 12px; 
+            background: white; 
+            align-items: flex-end;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 24px;
+            padding: 8px 8px 8px 20px;
+            display: flex;
+            align-items: flex-end;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .input-wrapper:focus-within {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-area textarea { 
+            flex: 1; 
+            padding: 10px 0;
+            border: none; 
+            border-radius: 0;
+            outline: none; 
+            font-size: 15px;
+            resize: none;
+            max-height: 100px;
+            min-height: 24px;
+            line-height: 1.4;
+            background: transparent;
+            font-family: inherit;
+        }
+        
+        .input-actions {
+            display: flex;
+            gap: 8px;
+            padding: 0 8px;
+            align-items: center;
+        }
+        
+        .emoji-btn, .attach-btn, .bg-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .emoji-btn:hover, .attach-btn:hover, .bg-btn:hover {
+            background: #e8e8e8;
+            color: #667eea;
+        }
+        
+        .send-btn { 
+            width: 50px; 
+            height: 50px; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; 
+            border-radius: 50%; 
+            border: none; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .send-btn:hover { 
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .send-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Emoji Picker */
+        .emoji-picker {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* Chat Background Selector */
+        .bg-selector {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 15px;
+            z-index: 1000;
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 250px;
+        }
+        
+        .bg-option {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .bg-option:hover {
+            transform: scale(1.05);
+        }
+        
+        .bg-option.active {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Profile Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 20px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            animation: modalSlideUp 0.3s ease;
+        }
+        
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            padding: 25px 30px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #f5f5f5;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .modal-body {
+            padding: 25px 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95rem;
+        }
+        
+        /* Loading States */
+        .loading { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 60px; 
+        }
+        
+        .loading-spinner { 
+            width: 40px; 
+            height: 40px; 
+            border: 3px solid #f8f9fa; 
+            border-top: 3px solid #667eea; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Empty States */
+        .empty-state { 
+            text-align: center; 
+            padding: 80px 20px; 
+            color: #9e9e9e; 
+        }
+        
+        .empty-state i { 
+            font-size: 70px; 
+            color: #e0e0e0; 
+            margin-bottom: 25px; 
+        }
+        
+        .empty-state h4 { 
+            font-size: 1.2rem; 
+            font-weight: 600; 
+            margin-bottom: 15px; 
+            color: #666; 
+        }
+        
+        .empty-state p { 
+            font-size: 0.95rem; 
+            line-height: 1.5; 
+            max-width: 300px; 
+            margin: 0 auto; 
+        }
+        
+        /* Friend Actions */
+        .friend-actions {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .list-item:hover .friend-actions {
+            opacity: 1;
+        }
+        
+        .friend-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #f5f5f5;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .friend-action-btn:hover {
+            background: #ff4757;
+            color: white;
+        }
+        
+        /* Request Actions */
+        .request-actions { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 10px; 
+        }
+        
+        .request-btn { 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s;
+        }
+        
+        .request-btn.accept { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; 
+        }
+        
+        .request-btn.accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .request-btn.reject { 
+            background: linear-gradient(135deg, #dc3545, #fd7e14); 
+            color: white; 
+        }
+        
+        .request-btn.reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .app-container { 
+                width: 100vw; 
+                height: 100vh; 
+                border-radius: 0; 
+            }
+            
+            .sidebar { 
+                width: 100%; 
+            }
+            
+            .chat-area { 
+                display: none; 
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                height: 100%; 
+                z-index: 10; 
+            }
+            
+            .chat-area.active { 
+                display: flex; 
+            }
+            
+            .back-btn { 
+                display: block; 
+            }
+            
+            .user-profile {
+                padding: 15px;
+            }
+            
+            .auth-container {
+                width: 90%;
+                padding: 2rem;
+            }
+            
+            .modal {
+                width: 95%;
+            }
+        }
+        
+        @media (min-width: 769px) { 
+            .back-btn { display: none; } 
+        }
     </style>
 </head>
 <body>
 
+    <!-- Auth Container -->
     <div class="auth-container" id="auth-box">
         <div class="auth-header">
-            <i class="fas fa-comments fa-3x" style="color: #667eea; margin-bottom: 10px;"></i>
-            <h2 id="auth-title">Login to Learnox</h2>
+            <div class="auth-logo">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h2 class="auth-title" id="auth-title">Login to Learnox Pro</h2>
+            <p class="auth-subtitle">Secure & Private Messaging</p>
         </div>
-        <div id="error-msg" style="color: red; text-align: center; margin-bottom: 10px;"></div>
+        
+        <div id="error-msg" style="color: #ff4757; text-align: center; margin-bottom: 15px; font-size: 0.95rem;"></div>
         
         <form id="auth-form">
+            <!-- Profile Picture Upload for Registration -->
+            <div class="profile-upload" id="profile-upload" style="display: none;">
+                <div class="profile-img-container" onclick="document.getElementById('profile-pic-input').click()">
+                    <img src="" alt="Profile" class="profile-img" id="profile-preview">
+                    <div class="profile-overlay">
+                        <i class="fas fa-camera"></i> Upload Photo
+                    </div>
+                </div>
+                <input type="file" id="profile-pic-input" accept="image/*" style="display: none;">
+            </div>
+            
             <input type="text" id="name" class="form-control hidden" placeholder="Full Name">
             <input type="email" id="email" class="form-control" placeholder="Email Address" required>
             <input type="password" id="password" class="form-control" placeholder="Password" required>
-            <button type="submit" class="btn" id="submit-btn">Login</button>
+            <button type="submit" class="btn" id="submit-btn">
+                <span id="btn-text">Login</span>
+                <i class="fas fa-spinner fa-spin" id="btn-spinner" style="display: none; margin-left: 10px;"></i>
+            </button>
         </form>
-        <div class="switch-text" id="switch-auth">Don't have an account? Register</div>
+        
+        <div class="switch-text" id="switch-auth">
+            Don't have an account? <span style="font-weight: 600;">Register</span>
+        </div>
     </div>
 
+    <!-- App Container -->
     <div class="app-container" id="app-box" style="display: none;">
+        <!-- Sidebar -->
         <div class="sidebar">
+            <!-- User Profile -->
             <div class="user-profile">
-                <div>
-                    <h3 id="my-name">User</h3>
-                    <small id="user-status">Online</small>
+                <div class="user-info">
+                    <img src="" alt="Avatar" class="user-avatar" id="my-avatar" onclick="showProfileModal()">
+                    <div class="user-details">
+                        <h3 id="my-name">User</h3>
+                        <small>
+                            <i class="fas fa-circle" style="color: #4CAF50; font-size: 0.7rem;"></i>
+                            <span id="user-status">Online</span>
+                        </small>
+                    </div>
                 </div>
-                <div class="logout-btn" onclick="logout()">Logout <i class="fas fa-sign-out-alt"></i></div>
+                <div class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </div>
             </div>
             
             <!-- Navigation Tabs -->
             <div class="nav-tabs">
-                <div class="nav-tab active" data-tab="friends">Friends</div>
-                <div class="nav-tab" data-tab="chats">Chats <span class="badge" id="unread-chats-count"></span></div>
-                <div class="nav-tab" data-tab="requests">Requests <span class="badge" id="pending-requests-count"></span></div>
-                <div class="nav-tab" data-tab="find">Find Users</div>
+                <div class="nav-tab active" data-tab="friends">
+                    <i class="fas fa-user-friends"></i> Friends
+                </div>
+                <div class="nav-tab" data-tab="chats">
+                    <i class="fas fa-comments"></i> Chats 
+                    <span class="nav-badge" id="unread-chats-count"></span>
+                </div>
+                <div class="nav-tab" data-tab="requests">
+                    <i class="fas fa-user-plus"></i> Requests 
+                    <span class="nav-badge" id="pending-requests-count"></span>
+                </div>
+                <div class="nav-tab" data-tab="find">
+                    <i class="fas fa-search"></i> Find Users
+                </div>
             </div>
             
             <!-- Search Box -->
             <div class="search-box">
                 <div class="search-container">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="global-search" placeholder="Search...">
+                    <input type="text" id="global-search" placeholder="Search friends, chats...">
                 </div>
             </div>
             
@@ -142,26 +1246,129 @@
             </div>
         </div>
 
+        <!-- Chat Area -->
         <div class="chat-area" id="chat-area">
             <div class="chat-header">
                 <i class="fas fa-arrow-left back-btn" onclick="closeChat()"></i>
-                <div class="avatar"><i class="fas fa-user"></i></div>
-                <div>
-                    <h3 id="chat-header-name">Select a user</h3>
-                    <small id="chat-status">Select a conversation to start messaging</small>
-                    <span class="typing-indicator" id="typing-indicator" style="display: none;">typing...</span>
+                <div class="avatar" id="chat-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="chat-header-info">
+                    <div class="chat-header-name" id="chat-header-name">
+                        Select a user
+                        <i class="fas fa-circle online-status" id="chat-status-icon" style="display: none;"></i>
+                    </div>
+                    <div class="chat-status">
+                        <span id="chat-status">Select a conversation to start messaging</span>
+                        <span class="typing-indicator" id="typing-indicator" style="display: none;">typing...</span>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="chat-action-btn" onclick="showChatSettings()" title="Chat Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="chat-action-btn" onclick="clearChat()" title="Clear Chat">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             </div>
+            
+            <!-- Messages Container -->
             <div class="messages" id="messages">
+                <div class="chat-bg-overlay"></div>
                 <div class="empty-state" id="chat-empty-state">
                     <i class="fas fa-comments"></i>
                     <h4>No messages yet</h4>
                     <p>Start a conversation by sending a message</p>
                 </div>
             </div>
+            
+            <!-- Input Area -->
             <div class="input-area">
-                <input type="text" id="msg-input" placeholder="Type a message...">
-                <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                <div class="input-wrapper">
+                    <textarea id="msg-input" placeholder="Type a message..." rows="1"></textarea>
+                    <div class="input-actions">
+                        <button class="emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">
+                            <i class="far fa-smile"></i>
+                        </button>
+                        <button class="bg-btn" onclick="toggleBgSelector()" title="Chat Background">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <input type="file" id="file-input" style="display: none;" accept="image/*,video/*,audio/*,.pdf,.doc,.docx">
+                        <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach File">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="send-btn" onclick="sendMessage()" id="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <!-- Emoji Picker -->
+            <div class="emoji-picker" id="emoji-picker"></div>
+            
+            <!-- Background Selector -->
+            <div class="bg-selector" id="bg-selector">
+                <div class="bg-option" style="background-image: url('https://images.unsplash.com/photo-1550684376-efcbd6e3f031?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg="default"></div>
+                <div class="bg-option" style="background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg="gradient1"></div>
+                <div class="bg-option" style="background-image: url('https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg="gradient2"></div>
+                <div class="bg-option" style="background-image: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg="space"></div>
+                <div class="bg-option" style="background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg="nature"></div>
+                <div class="bg-option" style="background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg="abstract"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Profile Settings</h3>
+                <button class="modal-close" onclick="hideProfileModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Profile Picture</label>
+                    <div class="profile-img-container" style="width: 150px; height: 150px;" onclick="document.getElementById('profile-update-input').click()">
+                        <img src="" alt="Profile" class="profile-img" id="profile-update-preview">
+                        <div class="profile-overlay">
+                            <i class="fas fa-camera"></i> Change Photo
+                        </div>
+                    </div>
+                    <input type="file" id="profile-update-input" accept="image/*" style="display: none;">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="profile-name" class="form-control" placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="profile-email" class="form-control" placeholder="Enter your email" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" id="current-password" class="form-control" placeholder="Enter current password">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <input type="password" id="new-password" class="form-control" placeholder="Enter new password">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" id="confirm-password" class="form-control" placeholder="Confirm new password">
+                </div>
+                
+                <button class="btn" onclick="updateProfile()" style="margin-top: 20px;">
+                    Save Changes
+                </button>
             </div>
         </div>
     </div>
@@ -178,25 +1385,133 @@
         let pendingRequests = [];
         let typingTimeout = null;
         let activeTab = 'friends';
-
+        let isSendingMessage = false;
+        let chatBackground = 'default';
+        let emojiPicker = null;
+        
         // Auto Login Check
         if (token && user) {
             showApp();
         }
-
+        
+        // Initialize Emoji Picker
+        function initEmojiPicker() {
+            emojiPicker = new EmojiPicker({
+                container: document.getElementById('emoji-picker'),
+                onSelect: (emoji) => {
+                    const input = document.getElementById('msg-input');
+                    input.value += emoji;
+                    input.focus();
+                }
+            });
+        }
+        
+        // Toggle Emoji Picker
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emoji-picker');
+            if (picker.style.display === 'block') {
+                picker.style.display = 'none';
+            } else {
+                picker.style.display = 'block';
+                document.getElementById('bg-selector').style.display = 'none';
+                if (!emojiPicker) {
+                    initEmojiPicker();
+                }
+            }
+        }
+        
+        // Toggle Background Selector
+        function toggleBgSelector() {
+            const selector = document.getElementById('bg-selector');
+            if (selector.style.display === 'grid') {
+                selector.style.display = 'none';
+            } else {
+                selector.style.display = 'grid';
+                document.getElementById('emoji-picker').style.display = 'none';
+                
+                // Set active background
+                document.querySelectorAll('.bg-option').forEach(option => {
+                    option.classList.remove('active');
+                    if (option.dataset.bg === chatBackground) {
+                        option.classList.add('active');
+                    }
+                });
+            }
+        }
+        
+        // Set Chat Background
+        document.querySelectorAll('.bg-option').forEach(option => {
+            option.addEventListener('click', function() {
+                chatBackground = this.dataset.bg;
+                const messages = document.getElementById('messages');
+                
+                // Remove all background classes
+                messages.classList.remove('bg-default', 'bg-gradient1', 'bg-gradient2', 'bg-space', 'bg-nature', 'bg-abstract');
+                
+                // Add selected background class
+                messages.classList.add(`bg-${chatBackground}`);
+                
+                // Update active state
+                document.querySelectorAll('.bg-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Save to localStorage
+                localStorage.setItem(`chat_bg_${currentChatId}`, chatBackground);
+                
+                // Hide selector
+                document.getElementById('bg-selector').style.display = 'none';
+            });
+        });
+        
         // --- AUTH FUNCTIONS ---
         const authForm = document.getElementById('auth-form');
         const switchAuth = document.getElementById('switch-auth');
-
+        let profilePicFile = null;
+        
         switchAuth.onclick = () => {
             isRegister = !isRegister;
             document.getElementById('name').classList.toggle('hidden', !isRegister);
-            document.getElementById('auth-title').innerText = isRegister ? 'Create Account' : 'Login to Learnox';
+            document.getElementById('profile-upload').style.display = isRegister ? 'block' : 'none';
+            document.getElementById('auth-title').innerText = isRegister ? 'Create Account' : 'Login to Learnox Pro';
             document.getElementById('submit-btn').innerText = isRegister ? 'Register' : 'Login';
-            switchAuth.innerText = isRegister ? 'Already have an account? Login' : "Don't have an account? Register";
+            document.getElementById('btn-text').innerText = isRegister ? 'Register' : 'Login';
+            switchAuth.innerHTML = isRegister ? 
+                'Already have an account? <span style="font-weight: 600;">Login</span>' : 
+                "Don't have an account? <span style="font-weight: 600;">Register</span>";
             document.getElementById('error-msg').innerText = '';
         };
-
+        
+        // Profile picture preview for registration
+        document.getElementById('profile-pic-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                profilePicFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Profile picture update
+        document.getElementById('profile-update-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-update-preview').src = e.target.result;
+                    document.getElementById('my-avatar').src = e.target.result;
+                    // Save to localStorage for immediate update
+                    localStorage.setItem('user_avatar', e.target.result);
+                };
+                reader.readAsDataURL(file);
+                
+                // Upload to server
+                uploadProfilePicture(file);
+            }
+        });
+        
         authForm.onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
@@ -204,33 +1519,70 @@
             const name = document.getElementById('name').value;
             const endpoint = isRegister ? '/register' : '/login';
             
+            // Show loading
+            document.getElementById('btn-spinner').style.display = 'inline-block';
+            document.getElementById('btn-text').innerText = isRegister ? 'Creating Account...' : 'Logging in...';
+            
             try {
+                let formData;
+                
+                if (isRegister) {
+                    formData = new FormData();
+                    formData.append('name', name);
+                    formData.append('email', email);
+                    formData.append('password', password);
+                    if (profilePicFile) {
+                        formData.append('profilePic', profilePicFile);
+                    }
+                } else {
+                    formData = JSON.stringify({ email, password });
+                }
+                
                 const res = await fetch(API_URL + endpoint, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
+                    headers: isRegister ? {} : { 'Content-Type': 'application/json' },
+                    body: isRegister ? formData : formData
                 });
                 const data = await res.json();
+                
                 if (data.error) throw new Error(data.error);
                 
                 token = data.token;
                 user = data.user;
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(user));
+                if (data.user.avatar) {
+                    localStorage.setItem('user_avatar', data.user.avatar);
+                }
+                
                 showApp();
             } catch (err) {
                 document.getElementById('error-msg').innerText = err.message;
+            } finally {
+                document.getElementById('btn-spinner').style.display = 'none';
+                document.getElementById('btn-text').innerText = isRegister ? 'Register' : 'Login';
             }
         };
-
+        
         function logout() {
+            if (socket) {
+                socket.emit('update_status', { userId: user.id, status: 'offline' });
+                socket.disconnect();
+            }
             localStorage.clear();
             location.reload();
         }
-
+        
         function showApp() {
             document.getElementById('auth-box').style.display = 'none';
             document.getElementById('app-box').style.display = 'flex';
+            
+            // Set user avatar
+            const savedAvatar = localStorage.getItem('user_avatar');
+            if (savedAvatar) {
+                document.getElementById('my-avatar').src = savedAvatar;
+            }
+            
             document.getElementById('my-name').innerText = user.name;
             socket.emit('join_user', user.id);
             socket.emit('update_status', { userId: user.id, status: 'online' });
@@ -238,20 +1590,68 @@
             
             // Setup socket listeners
             setupSocketListeners();
+            
+            // Initialize textarea auto-resize
+            const textarea = document.getElementById('msg-input');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+                
+                // Typing indicator
+                if (!currentChatId) return;
+                
+                if (typingTimeout) clearTimeout(typingTimeout);
+                
+                socket.emit('typing', { 
+                    chatId: currentChatId, 
+                    userId: user.id 
+                });
+                
+                typingTimeout = setTimeout(() => {
+                    // Typing stopped
+                }, 1000);
+            });
+            
+            // Send message on Enter (Shift+Enter for new line)
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Close emoji/bg selectors when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.emoji-btn') && !e.target.closest('#emoji-picker')) {
+                    document.getElementById('emoji-picker').style.display = 'none';
+                }
+                if (!e.target.closest('.bg-btn') && !e.target.closest('#bg-selector')) {
+                    document.getElementById('bg-selector').style.display = 'none';
+                }
+            });
         }
-
+        
         // Setup Socket Listeners
         function setupSocketListeners() {
             socket.on('new_message', (msg) => {
                 if (currentChatId === msg.chatId) {
-                    addMessageToUI(msg);
+                    addMessageToUI(msg, false);
+                    updateMessageStatus(msg._id, 'delivered');
+                    if (msg.sender._id !== user.id) {
+                        updateMessageStatus(msg._id, 'read');
+                    }
                 }
-                // Update unread counts
                 if (activeTab === 'chats' || activeTab === 'friends') {
                     loadTab(activeTab);
                 }
             });
-
+            
+            socket.on('message_status_update', (data) => {
+                if (currentChatId === data.chatId) {
+                    updateMessageStatus(data.messageId, data.status);
+                }
+            });
+            
             socket.on('friend_request_received', (request) => {
                 showNotification('Friend Request', `${request.senderName} sent you a friend request`);
                 if (activeTab === 'requests') {
@@ -259,24 +1659,23 @@
                 }
                 updateRequestsCount();
             });
-
+            
             socket.on('friend_request_accepted', (data) => {
                 showNotification('Friend Request Accepted', `${data.acceptorName} accepted your friend request`);
                 if (activeTab === 'friends') {
                     loadFriends();
                 }
             });
-
+            
             socket.on('user_status_changed', (data) => {
                 if (currentChatUser && currentChatUser.id === data.userId) {
                     updateChatStatus(data.status);
                 }
-                // Refresh current tab if needed
                 if (activeTab === 'friends' || activeTab === 'chats') {
                     loadTab(activeTab);
                 }
             });
-
+            
             socket.on('typing', (data) => {
                 if (currentChatId === data.chatId && data.userId !== user.id) {
                     document.getElementById('typing-indicator').style.display = 'inline';
@@ -285,16 +1684,136 @@
                     }, 2000);
                 }
             });
+            
+            socket.on('message_deleted', (data) => {
+                if (currentChatId === data.chatId) {
+                    const msgElement = document.querySelector(`[data-message-id="${data.messageId}"]`);
+                    if (msgElement) {
+                        msgElement.innerHTML = '<i>Message deleted</i>';
+                        msgElement.classList.add('deleted');
+                    }
+                }
+            });
+            
+            socket.on('message_edited', (data) => {
+                if (currentChatId === data.chatId) {
+                    const msgElement = document.querySelector(`[data-message-id="${data.messageId}"]`);
+                    if (msgElement) {
+                        const content = msgElement.querySelector('.msg-content');
+                        if (content) {
+                            content.textContent = data.newText;
+                        }
+                        const edited = msgElement.querySelector('.msg-edited');
+                        if (edited) {
+                            edited.style.display = 'flex';
+                        }
+                    }
+                }
+            });
         }
-
+        
+        // --- PROFILE FUNCTIONS ---
+        function showProfileModal() {
+            document.getElementById('profile-modal').style.display = 'flex';
+            document.getElementById('profile-name').value = user.name;
+            document.getElementById('profile-email').value = user.email;
+            
+            const savedAvatar = localStorage.getItem('user_avatar');
+            if (savedAvatar) {
+                document.getElementById('profile-update-preview').src = savedAvatar;
+            }
+        }
+        
+        function hideProfileModal() {
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+        
+        async function updateProfile() {
+            const name = document.getElementById('profile-name').value;
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (newPassword && newPassword !== confirmPassword) {
+                showNotification('Error', 'New passwords do not match');
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_URL + '/user/profile', {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        currentPassword,
+                        newPassword
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                user.name = data.user.name;
+                localStorage.setItem('user', JSON.stringify(user));
+                document.getElementById('my-name').innerText = user.name;
+                
+                if (data.user.avatar) {
+                    localStorage.setItem('user_avatar', data.user.avatar);
+                    document.getElementById('my-avatar').src = data.user.avatar;
+                }
+                
+                showNotification('Success', 'Profile updated successfully');
+                hideProfileModal();
+                
+                // Clear password fields
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+                
+            } catch (error) {
+                showNotification('Error', error.message || 'Failed to update profile');
+            }
+        }
+        
+        async function uploadProfilePicture(file) {
+            try {
+                const formData = new FormData();
+                formData.append('profilePic', file);
+                
+                const res = await fetch(API_URL + '/user/profile-picture', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                user.avatar = data.avatarUrl;
+                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('user_avatar', data.avatarUrl);
+                
+            } catch (error) {
+                console.error('Error uploading profile picture:', error);
+                showNotification('Error', 'Failed to upload profile picture');
+            }
+        }
+        
         // --- TAB MANAGEMENT ---
         function switchTab(tabName) {
             activeTab = tabName;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            event.target.closest('.nav-tab').classList.add('active');
             loadTab(tabName);
         }
-
+        
         async function loadTab(tab) {
             const list = document.getElementById('list-container');
             list.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
@@ -325,8 +1844,8 @@
                 `;
             }
         }
-
-        // Load Friends
+        
+        // Load Friends with delete option
         async function loadFriends() {
             try {
                 const res = await fetch(API_URL + '/friends', {
@@ -347,24 +1866,45 @@
                     `;
                     return;
                 }
-
+                
                 let html = '';
                 for (const friend of friends) {
-                    // Get unread count for each friend
                     const unreadRes = await fetch(`${API_URL}/chats/unread/${friend.id}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const unreadData = await unreadRes.json();
                     const unreadCount = unreadData.count || 0;
-
+                    
+                    // Get last message
+                    const lastMsgRes = await fetch(`${API_URL}/chats/last-message/${friend.id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const lastMsgData = await lastMsgRes.json();
+                    const lastMessage = lastMsgData.lastMessage || 'No messages yet';
+                    
                     html += `
                         <div class="list-item" data-user-id="${friend.id}">
-                            <div class="avatar"><i class="fas fa-user"></i></div>
-                            <div style="flex: 1;">
-                                <h4>${friend.name}</h4>
-                                <small>${friend.email} ${friend.status === 'online' ? '<span class="online-status"></span>Online' : 'Offline'}</small>
+                            <div class="avatar">
+                                ${friend.avatar ? 
+                                    `<img src="${friend.avatar}" class="avatar-img" alt="${friend.name}">` : 
+                                    `<i class="fas fa-user"></i>`
+                                }
                             </div>
-                            ${unreadCount > 0 ? `<div class="unread-count">${unreadCount}</div>` : ''}
+                            <div class="list-item-content">
+                                <h4>${friend.name}</h4>
+                                <small>
+                                    <span class="${friend.status === 'online' ? 'online-status' : 'offline-status'}"></span>
+                                    ${friend.status === 'online' ? 'Online' : 'Offline'} • ${lastMessage}
+                                </small>
+                            </div>
+                            <div class="list-item-meta">
+                                ${unreadCount > 0 ? `<div class="unread-count">${unreadCount}</div>` : ''}
+                            </div>
+                            <div class="friend-actions">
+                                <button class="friend-action-btn" onclick="unfriend('${friend.id}')" title="Remove Friend">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                 }
@@ -373,18 +1913,41 @@
                 
                 // Add click handlers
                 document.querySelectorAll('.list-item[data-user-id]').forEach(item => {
-                    item.addEventListener('click', async () => {
-                        const userId = item.dataset.userId;
-                        const friend = friends.find(f => f.id === userId);
-                        await openChat(userId, friend.name);
+                    item.addEventListener('click', async (e) => {
+                        if (!e.target.closest('.friend-action-btn')) {
+                            const userId = item.dataset.userId;
+                            const friend = friends.find(f => f.id === userId);
+                            await openChat(userId, friend.name);
+                        }
                     });
                 });
             } catch (error) {
                 console.error('Error loading friends:', error);
             }
         }
-
-        // Load Chats
+        
+        // Unfriend a user
+        async function unfriend(friendId) {
+            if (!confirm('Are you sure you want to remove this friend?')) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/friends/${friendId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                showNotification('Success', 'Friend removed successfully');
+                loadFriends();
+            } catch (error) {
+                showNotification('Error', 'Failed to remove friend');
+            }
+        }
+        
+        // Load Chats with improved privacy
         async function loadChats() {
             try {
                 const res = await fetch(API_URL + '/chats', {
@@ -404,7 +1967,7 @@
                     `;
                     return;
                 }
-
+                
                 let html = '';
                 let totalUnread = 0;
                 
@@ -413,20 +1976,33 @@
                     const unreadCount = chat.unreadCount || 0;
                     totalUnread += unreadCount;
                     
+                    // Format time
+                    const time = chat.lastMessageTime ? 
+                        new Date(chat.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    
                     html += `
                         <div class="list-item" data-chat-id="${chat._id}" data-user-id="${otherUser._id}">
-                            <div class="avatar"><i class="fas fa-user"></i></div>
-                            <div style="flex: 1;">
-                                <h4>${otherUser.name}</h4>
-                                <small>${chat.lastMessage ? chat.lastMessage.text : 'No messages yet'}</small>
+                            <div class="avatar">
+                                ${otherUser.avatar ? 
+                                    `<img src="${otherUser.avatar}" class="avatar-img" alt="${otherUser.name}">` : 
+                                    `<i class="fas fa-user"></i>`
+                                }
                             </div>
-                            ${unreadCount > 0 ? `<div class="unread-count">${unreadCount}</div>` : ''}
+                            <div class="list-item-content">
+                                <h4>${otherUser.name}</h4>
+                                <small>${chat.lastMessage || 'No messages yet'}</small>
+                            </div>
+                            <div class="list-item-meta">
+                                ${time ? `<div class="list-item-time">${time}</div>` : ''}
+                                ${unreadCount > 0 ? `<div class="unread-count">${unreadCount}</div>` : ''}
+                            </div>
                         </div>
                     `;
                 }
                 
                 list.innerHTML = html;
                 document.getElementById('unread-chats-count').textContent = totalUnread > 0 ? totalUnread : '';
+                document.getElementById('unread-chats-count').style.display = totalUnread > 0 ? 'inline-block' : 'none';
                 
                 // Add click handlers
                 document.querySelectorAll('.list-item[data-chat-id]').forEach(item => {
@@ -441,7 +2017,7 @@
                 console.error('Error loading chats:', error);
             }
         }
-
+        
         // Load Friend Requests
         async function loadFriendRequests() {
             try {
@@ -464,12 +2040,17 @@
                     updateRequestsCount();
                     return;
                 }
-
+                
                 let html = '';
                 for (const request of requests) {
                     html += `
                         <div class="list-item" data-request-id="${request._id}">
-                            <div class="avatar"><i class="fas fa-user"></i></div>
+                            <div class="avatar">
+                                ${request.sender.avatar ? 
+                                    `<img src="${request.sender.avatar}" class="avatar-img" alt="${request.sender.name}">` : 
+                                    `<i class="fas fa-user"></i>`
+                                }
+                            </div>
                             <div style="flex: 1;">
                                 <h4>${request.sender.name}</h4>
                                 <small>${request.sender.email}</small>
@@ -498,7 +2079,7 @@
                 console.error('Error loading friend requests:', error);
             }
         }
-
+        
         // Load Find Users
         async function loadFindUsers() {
             try {
@@ -519,21 +2100,19 @@
                     `;
                     return;
                 }
-
-                // Get current friends for comparison
+                
                 const friendsRes = await fetch(API_URL + '/friends', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const currentFriends = await friendsRes.json();
                 const friendIds = currentFriends.map(f => f.id);
                 
-                // Get pending requests
                 const requestsRes = await fetch(API_URL + '/friend-requests/sent', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const sentRequests = await requestsRes.json();
                 const requestedIds = sentRequests.map(r => r.receiver?._id || r.receiver);
-
+                
                 let html = '';
                 for (const userItem of users) {
                     if (userItem._id === user.id) continue;
@@ -543,7 +2122,12 @@
                     
                     html += `
                         <div class="list-item" data-user-id="${userItem._id}">
-                            <div class="avatar"><i class="fas fa-user"></i></div>
+                            <div class="avatar">
+                                ${userItem.avatar ? 
+                                    `<img src="${userItem.avatar}" class="avatar-img" alt="${userItem.name}">` : 
+                                    `<i class="fas fa-user"></i>`
+                                }
+                            </div>
                             <div style="flex: 1;">
                                 <h4>${userItem.name}</h4>
                                 <small>${userItem.email}</small>
@@ -562,7 +2146,6 @@
                 
                 list.innerHTML = html;
                 
-                // Add click handlers
                 document.querySelectorAll('.send-request').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -574,8 +2157,8 @@
                 console.error('Error loading find users:', error);
             }
         }
-
-        // Handle Search
+        
+        // Search functionality
         document.getElementById('global-search').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
             const items = document.querySelectorAll('.list-item');
@@ -585,7 +2168,7 @@
                 item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
             });
         });
-
+        
         // --- FRIEND REQUEST FUNCTIONS ---
         async function sendFriendRequest(receiverId) {
             try {
@@ -608,7 +2191,7 @@
                 showNotification('Error', error.message || 'Failed to send friend request');
             }
         }
-
+        
         async function handleFriendRequest(requestId, action) {
             try {
                 const res = await fetch(`${API_URL}/friend-requests/${requestId}/${action}`, {
@@ -621,7 +2204,6 @@
                 
                 showNotification('Success', `Friend request ${action}ed`);
                 
-                // Refresh appropriate lists
                 loadFriendRequests();
                 if (action === 'accept') {
                     loadFriends();
@@ -631,16 +2213,16 @@
                 showNotification('Error', `Failed to ${action} friend request`);
             }
         }
-
+        
         function updateRequestsCount() {
             const count = pendingRequests.length;
             document.getElementById('pending-requests-count').textContent = count > 0 ? count : '';
+            document.getElementById('pending-requests-count').style.display = count > 0 ? 'inline-block' : 'none';
         }
-
+        
         // --- CHAT FUNCTIONS ---
         async function openChat(targetUserId, name) {
             try {
-                // Create or get chat
                 const res = await fetch(API_URL + '/chats', {
                     method: 'POST',
                     headers: { 
@@ -660,18 +2242,27 @@
                 document.getElementById('chat-status').innerHTML = `<span class="online-status"></span>Online`;
                 document.getElementById('chat-area').classList.add('active');
                 document.getElementById('chat-empty-state').style.display = 'none';
+                document.getElementById('chat-status-icon').style.display = 'inline-block';
                 
                 socket.emit('join_chat', currentChatId);
                 loadMessages();
                 
-                // Mark messages as read
                 await markMessagesAsRead();
+                
+                // Load saved background
+                const savedBg = localStorage.getItem(`chat_bg_${currentChatId}`);
+                if (savedBg) {
+                    chatBackground = savedBg;
+                    const messages = document.getElementById('messages');
+                    messages.classList.remove('bg-default', 'bg-gradient1', 'bg-gradient2', 'bg-space', 'bg-nature', 'bg-abstract');
+                    messages.classList.add(`bg-${chatBackground}`);
+                }
             } catch (error) {
                 console.error('Error opening chat:', error);
                 showNotification('Error', 'Failed to open chat');
             }
         }
-
+        
         async function openChatWithExisting(targetUserId, name, chatId) {
             currentChatId = chatId;
             currentChatUser = { id: targetUserId, name: name };
@@ -680,14 +2271,23 @@
             document.getElementById('chat-status').innerHTML = `<span class="online-status"></span>Online`;
             document.getElementById('chat-area').classList.add('active');
             document.getElementById('chat-empty-state').style.display = 'none';
+            document.getElementById('chat-status-icon').style.display = 'inline-block';
             
             socket.emit('join_chat', currentChatId);
             loadMessages();
             
-            // Mark messages as read
             await markMessagesAsRead();
+            
+            // Load saved background
+            const savedBg = localStorage.getItem(`chat_bg_${currentChatId}`);
+            if (savedBg) {
+                chatBackground = savedBg;
+                const messages = document.getElementById('messages');
+                messages.classList.remove('bg-default', 'bg-gradient1', 'bg-gradient2', 'bg-space', 'bg-nature', 'bg-abstract');
+                messages.classList.add(`bg-${chatBackground}`);
+            }
         }
-
+        
         async function loadMessages() {
             try {
                 const res = await fetch(`${API_URL}/chats/${currentChatId}/messages`, {
@@ -703,36 +2303,114 @@
                     return;
                 }
                 
-                msgs.forEach(addMessageToUI);
+                msgs.forEach(msg => addMessageToUI(msg, true));
                 scrollToBottom();
             } catch (error) {
                 console.error('Error loading messages:', error);
             }
         }
-
-        function addMessageToUI(msg) {
-            const div = document.createElement('div');
+        
+        function addMessageToUI(msg, isHistory = false) {
+            const container = document.getElementById('messages');
             const isMe = msg.sender._id === user.id || msg.sender === user.id;
-            div.className = `msg ${isMe ? 'sent' : 'received'}`;
-            div.innerText = msg.text;
-            document.getElementById('messages').appendChild(div);
-            scrollToBottom();
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${isMe ? 'sent' : 'received'}`;
+            msgDiv.dataset.messageId = msg._id;
+            msgDiv.dataset.senderId = msg.sender._id || msg.sender;
+            
+            // Message content
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'msg-content';
+            contentDiv.innerText = msg.text;
+            
+            // Message meta (time and status)
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'msg-meta';
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'msg-time';
+            timeSpan.innerText = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            metaDiv.appendChild(timeSpan);
+            
+            if (isMe) {
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'msg-status';
+                
+                let statusIcon = 'fa-clock';
+                let statusClass = 'status-sent';
+                
+                if (msg.status === 'delivered') {
+                    statusIcon = 'fa-check-double';
+                    statusClass = 'status-delivered';
+                } else if (msg.status === 'read') {
+                    statusIcon = 'fa-check-double';
+                    statusClass = 'status-read';
+                }
+                
+                statusDiv.innerHTML = `<i class="fas ${statusIcon} status-icon ${statusClass}"></i>`;
+                metaDiv.appendChild(statusDiv);
+            }
+            
+            // Edited indicator
+            if (msg.edited) {
+                const editedDiv = document.createElement('div');
+                editedDiv.className = 'msg-edited';
+                editedDiv.innerHTML = '<i class="fas fa-pen"></i> edited';
+                msgDiv.appendChild(editedDiv);
+            }
+            
+            // Message actions (for sent messages)
+            if (isMe) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'msg-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'msg-action-btn';
+                editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                editBtn.onclick = () => editMessage(msg._id, msg.text);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'msg-action-btn delete';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                deleteBtn.onclick = () => deleteMessage(msg._id);
+                
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(deleteBtn);
+                
+                msgDiv.appendChild(actionsDiv);
+            }
+            
+            msgDiv.appendChild(contentDiv);
+            msgDiv.appendChild(metaDiv);
+            
+            if (!isHistory) {
+                msgDiv.style.animation = 'messageAppear 0.3s ease';
+            }
+            
+            container.appendChild(msgDiv);
+            document.getElementById('chat-empty-state').style.display = 'none';
+            
+            if (!isHistory) {
+                scrollToBottom();
+            }
         }
-
+        
         async function sendMessage() {
+            if (isSendingMessage || !currentChatId) return;
+            
             const input = document.getElementById('msg-input');
             const text = input.value.trim();
             
-            if (!text || !currentChatId) return;
-
-            // Send typing indicator
-            socket.emit('typing', { 
-                chatId: currentChatId, 
-                userId: user.id 
-            });
-
+            if (!text) return;
+            
+            isSendingMessage = true;
+            const btn = document.getElementById('send-btn');
+            btn.disabled = true;
+            
             try {
-                await fetch(API_URL + '/messages', {
+                const res = await fetch(API_URL + '/messages', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -740,13 +2418,74 @@
                     },
                     body: JSON.stringify({ chatId: currentChatId, text })
                 });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
                 input.value = '';
+                input.style.height = 'auto';
+                
+                // Reset typing indicator
+                if (typingTimeout) {
+                    clearTimeout(typingTimeout);
+                    typingTimeout = null;
+                }
+                
             } catch (error) {
                 console.error('Error sending message:', error);
                 showNotification('Error', 'Failed to send message');
+            } finally {
+                isSendingMessage = false;
+                btn.disabled = false;
             }
         }
-
+        
+        async function editMessage(messageId, currentText) {
+            const newText = prompt('Edit your message:', currentText);
+            if (!newText || newText === currentText) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/messages/${messageId}/edit`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ text: newText })
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                showNotification('Success', 'Message edited');
+            } catch (error) {
+                console.error('Error editing message:', error);
+                showNotification('Error', 'Failed to edit message');
+            }
+        }
+        
+        async function deleteMessage(messageId) {
+            if (!confirm('Delete this message for everyone?')) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/messages/${messageId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                showNotification('Success', 'Message deleted');
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                showNotification('Error', 'Failed to delete message');
+            }
+        }
+        
         async function markMessagesAsRead() {
             try {
                 await fetch(`${API_URL}/chats/${currentChatId}/read`, {
@@ -754,7 +2493,6 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                // Update unread counts
                 if (activeTab === 'chats' || activeTab === 'friends') {
                     loadTab(activeTab);
                 }
@@ -762,50 +2500,71 @@
                 console.error('Error marking messages as read:', error);
             }
         }
-
-        function updateChatStatus(status) {
-            const statusEl = document.getElementById('chat-status');
-            if (status === 'online') {
-                statusEl.innerHTML = `<span class="online-status"></span>Online`;
-            } else {
-                statusEl.innerHTML = `Offline`;
+        
+        function updateMessageStatus(messageId, status) {
+            const msgElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (msgElement) {
+                const statusIcon = msgElement.querySelector('.status-icon');
+                if (statusIcon) {
+                    statusIcon.className = `fas fa-check-double status-icon status-${status}`;
+                }
             }
         }
-
-        // Handle typing
-        document.getElementById('msg-input').addEventListener('input', function() {
-            if (!currentChatId) return;
+        
+        function updateChatStatus(status) {
+            const statusEl = document.getElementById('chat-status');
+            const icon = document.getElementById('chat-status-icon');
             
-            // Clear previous timeout
-            if (typingTimeout) clearTimeout(typingTimeout);
-            
-            // Send typing indicator
-            socket.emit('typing', { 
-                chatId: currentChatId, 
-                userId: user.id 
-            });
-            
-            // Set timeout to stop typing indicator
-            typingTimeout = setTimeout(() => {
-                // Typing stopped
-            }, 1000);
-        });
-
+            if (status === 'online') {
+                statusEl.innerHTML = `<span class="online-status"></span>Online`;
+                icon.style.color = '#4CAF50';
+            } else {
+                statusEl.innerHTML = `Offline`;
+                icon.style.color = '#9e9e9e';
+            }
+        }
+        
         function scrollToBottom() {
             const d = document.getElementById('messages');
             d.scrollTop = d.scrollHeight;
         }
-
+        
         function closeChat() {
             document.getElementById('chat-area').classList.remove('active');
             currentChatId = null;
             currentChatUser = null;
             document.getElementById('typing-indicator').style.display = 'none';
+            document.getElementById('chat-status-icon').style.display = 'none';
         }
-
+        
+        function showChatSettings() {
+            showNotification('Info', 'Chat settings coming soon!');
+        }
+        
+        async function clearChat() {
+            if (!currentChatId || !confirm('Clear all messages in this chat?')) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/chats/${currentChatId}/clear`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                document.getElementById('messages').innerHTML = '';
+                document.getElementById('chat-empty-state').style.display = 'block';
+                showNotification('Success', 'Chat cleared');
+            } catch (error) {
+                console.error('Error clearing chat:', error);
+                showNotification('Error', 'Failed to clear chat');
+            }
+        }
+        
         // --- NOTIFICATION FUNCTION ---
         function showNotification(title, message) {
-            // Create notification element
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
@@ -813,29 +2572,43 @@
                 right: 20px;
                 background: white;
                 padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
                 z-index: 1000;
                 border-left: 4px solid #667eea;
                 animation: slideIn 0.3s ease;
+                max-width: 350px;
+                min-width: 250px;
+                border: 1px solid #f0f0f0;
             `;
             
             notification.innerHTML = `
-                <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${title}</div>
-                <div style="color: #666; font-size: 0.9rem;">${message}</div>
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div style="color: #667eea; font-size: 1.2rem;">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 5px; font-size: 0.95rem;">${title}</div>
+                        <div style="color: #666; font-size: 0.9rem; line-height: 1.4;">${message}</div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #999; cursor: pointer; font-size: 1rem;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             `;
             
             document.body.appendChild(notification);
             
-            // Remove after 3 seconds
             setTimeout(() => {
                 notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
-            }, 3000);
+            }, 4000);
         }
-
+        
         // Add CSS for notifications
         const style = document.createElement('style');
         style.textContent = `
@@ -847,15 +2620,36 @@
                 from { transform: translateX(0); opacity: 1; }
                 to { transform: translateX(100%); opacity: 0; }
             }
+            
+            /* Chat Backgrounds */
+            .bg-default { background: #f9f9f9; }
+            .bg-gradient1 { background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); }
+            .bg-gradient2 { background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); }
+            .bg-space { background: url('https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80') center/cover; }
+            .bg-nature { background: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80') center/cover; }
+            .bg-abstract { background: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80') center/cover; }
+            
+            .bg-space .chat-bg-overlay,
+            .bg-nature .chat-bg-overlay,
+            .bg-abstract .chat-bg-overlay {
+                background: rgba(255,255,255,0.85);
+            }
         `;
         document.head.appendChild(style);
-
-        // Update navigation tabs to use new function
+        
+        // Update navigation tabs
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 const tabName = this.getAttribute('data-tab');
                 switchTab(tabName);
             });
+        });
+        
+        // Handle window close
+        window.addEventListener('beforeunload', () => {
+            if (socket && user) {
+                socket.emit('update_status', { userId: user.id, status: 'offline' });
+            }
         });
     </script>
 </body>
