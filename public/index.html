@@ -3,582 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learnox - Purple Chat</title>
+    <title>Learnox - Secure Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        /* --- PURPLE LIGHT THEME (Aapka Diya Hua Design) --- */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        :root { --primary: #667eea; --secondary: #764ba2; --bg: #f0f2f5; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, var(--primary), var(--secondary)); height: 100vh; display: flex; align-items: center; justify-content: center; }
         
-        body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; 
-            color: #333;
-        }
-
-        /* --- AUTH SCREEN --- */
-        .auth-container { 
-            background: white; 
-            width: 400px; 
-            padding: 2.5rem; 
-            border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
-            text-align: center;
-            /* Animation added */
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .logo { 
-            font-size: 3rem; margin-bottom: 1rem; 
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .app-container { width: 95vw; height: 90vh; background: white; border-radius: 15px; display: flex; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         
-        .form-control { 
-            width: 100%; padding: 14px 16px; margin-bottom: 15px; 
-            border: 2px solid #e1e5e9; border-radius: 10px; 
-            font-size: 15px; outline: none; background: #f8f9fa; transition: 0.3s;
-        }
-        .form-control:focus { border-color: #667eea; background: white; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
-        
-        .btn { 
-            width: 100%; padding: 14px; margin-top: 10px;
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white; border: none; border-radius: 10px; 
-            cursor: pointer; font-weight: 600; font-size: 16px; transition: 0.3s;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3); }
-        
-        .switch-text { margin-top: 20px; font-size: 14px; color: #6c757d; }
-        .switch-link { color: #667eea; cursor: pointer; font-weight: 600; margin-left: 5px; }
-
-        /* --- MAIN APP INTERFACE --- */
-        .app-container { 
-            display: none; /* Pehle Hide rahega */
-            width: 95vw; height: 92vh; background: white; 
-            border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
-            overflow: hidden; 
-            /* Layout */
-            display: flex; 
-        }
-
         /* Sidebar */
-        .sidebar { width: 340px; background: #f8f9fa; border-right: 1px solid #e9ecef; display: flex; flex-direction: column; }
+        .sidebar { width: 350px; border-right: 1px solid #ddd; display: flex; flex-direction: column; background: #fff; }
+        .side-header { padding: 15px; background: #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
         
-        .user-profile-header { 
-            padding: 20px; background: white; border-bottom: 1px solid #e9ecef;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .my-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #667eea; padding: 2px; cursor: pointer; }
+        .search-box { padding: 10px; }
+        .search-box input { width: 100%; padding: 8px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
         
-        /* Tabs */
-        .nav-tabs { display: flex; background: white; border-bottom: 1px solid #e9ecef; }
-        .nav-tab { 
-            flex: 1; text-align: center; padding: 15px 0; cursor: pointer; 
-            color: #6c757d; font-weight: 600; font-size: 14px; transition: 0.2s;
-        }
-        .nav-tab.active { color: #667eea; border-bottom: 3px solid #667eea; background: #f8f9fa; }
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { padding: 12px; display: flex; gap: 12px; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
+        .chat-item:hover { background: #f9f9f9; }
+        .chat-item .info { flex: 1; }
+        .chat-item h4 { font-size: 15px; }
+        .chat-item p { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Lists */
-        .list-container { flex: 1; overflow-y: auto; }
-        .list-item { 
-            padding: 15px 20px; border-bottom: 1px solid #f1f3f5; cursor: pointer; 
-            display: flex; align-items: center; gap: 15px; transition: 0.2s; background: white;
-        }
-        .list-item:hover { background: #f1f3f5; }
-        .item-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ddd; object-fit: cover; }
-        .item-info h4 { font-size: 15px; margin-bottom: 3px; color: #333; }
-        .item-info p { font-size: 13px; color: #6c757d; }
-
-        /* Buttons for Requests */
-        .req-btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; margin-left: 5px; color: white; }
-        .btn-accept { background: #00b894; }
-        .btn-reject { background: #ff4b4b; }
-
-        /* Chat Area */
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: white; position: relative; }
-        .chat-header { 
-            padding: 15px 25px; border-bottom: 1px solid #e9ecef; 
-            display: flex; align-items: center; gap: 15px; background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02); z-index: 10;
-        }
+        /* Main Chat Area */
+        .main-chat { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; position: relative; }
+        .chat-header { padding: 10px 20px; background: #f0f2f5; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #ddd; }
         
-        .messages-box { 
-            flex: 1; padding: 25px; overflow-y: auto; background: #fdfdfd; 
-            display: flex; flex-direction: column; gap: 10px; 
-            background-image: radial-gradient(#667eea 0.5px, transparent 0.5px);
-            background-size: 20px 20px; opacity: 1;
-        }
+        .messages-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
         
-        .msg { max-width: 70%; padding: 12px 16px; border-radius: 15px; font-size: 14px; position: relative; word-wrap: break-word; }
-        .msg.sent { 
-            align-self: flex-end; 
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white; 
-            border-bottom-right-radius: 2px; 
-            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
-        }
-        .msg.received { 
-            align-self: flex-start; 
-            background: white; 
-            border: 1px solid #e9ecef; 
-            color: #333;
-            border-bottom-left-radius: 2px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .input-area { 
-            padding: 20px; border-top: 1px solid #e9ecef; display: flex; gap: 10px; background: white; 
-        }
-        .input-field { 
-            flex: 1; padding: 12px 20px; border: 2px solid #e9ecef; 
-            border-radius: 25px; outline: none; transition: 0.3s;
-        }
-        .input-field:focus { border-color: #667eea; }
-        .send-btn-circle { 
-            width: 45px; height: 45px; border-radius: 50%; 
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white; border: none; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; }
+        /* Message Bubbles */
+        .msg { max-width: 65%; padding: 8px 12px; border-radius: 8px; font-size: 14px; position: relative; word-wrap: break-word; }
+        .msg.sent { align-self: flex-end; background: #dcf8c6; }
+        .msg.received { align-self: flex-start; background: #fff; }
         
-        .hidden { display: none !important; }
+        .msg-meta { font-size: 10px; color: #888; display: flex; justify-content: flex-end; gap: 4px; margin-top: 2px; }
+        .edited-tag { font-style: italic; font-size: 9px; margin-right: 5px; }
+        
+        /* Input Area */
+        .input-area { padding: 10px 20px; background: #f0f2f5; display: flex; align-items: center; gap: 10px; }
+        .input-area input { flex: 1; padding: 10px; border-radius: 25px; border: none; outline: none; }
+        .btn-send { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Ticks */
+        .tick { font-size: 12px; }
+        .tick.seen { color: #34b7f1; }
+
+        /* Profile Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 350px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 13px; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+
+        /* Background Select */
+        .bg-options { display: flex; gap: 10px; margin-top: 10px; }
+        .bg-thumb { width: 30px; height: 30px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; }
     </style>
 </head>
 <body>
 
-    <div class="auth-container" id="auth-box">
-        <div class="logo"><i class="fas fa-comments"></i></div>
-        <h2 id="auth-title" style="margin-bottom: 10px; color:#333;">Login</h2>
-        <p style="margin-bottom: 20px; color:#777;">Welcome to Learnox</p>
-
-        <form id="auth-form">
-            <input type="text" id="reg-name" class="form-control hidden" placeholder="Full Name">
-            <input type="text" id="reg-username" class="form-control hidden" placeholder="Username (starts with @)">
-            
-            <input type="email" id="email" class="form-control" placeholder="Email Address" required>
-            <input type="password" id="password" class="form-control" placeholder="Password" required>
-            
-            <button type="submit" class="btn" id="submit-btn">Login</button>
-        </form>
-
-        <div class="switch-text">
-            <span id="switch-text">Don't have an account?</span>
-            <span class="switch-link" onclick="toggleAuth()">Register</span>
+    <div id="auth-screen" style="display: flex;">
+        <div style="background: white; padding: 40px; border-radius: 15px; width: 350px;">
+            <h2 id="auth-title">Login to Learnox</h2><br>
+            <input type="email" id="auth-email" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px;">
+            <input type="password" id="auth-pass" placeholder="Password" style="width:100%; padding:10px; margin-bottom:20px;">
+            <button onclick="handleAuth()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer;">Continue</button>
         </div>
     </div>
 
-    <div class="app-container" id="app-box" style="display: none;">
+    <div class="app-container" id="app-screen" style="display: none;">
         <div class="sidebar">
-            <div class="user-profile-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img id="my-avatar-img" src="" class="my-avatar" onclick="openProfile()">
-                    <div>
-                        <h4 id="my-name-display">User</h4>
-                        <small id="my-username-display" style="color:#667eea; font-weight:bold;">@user</small>
-                    </div>
+            <div class="side-header">
+                <img src="" id="my-avatar" class="avatar" onclick="toggleModal('profile-modal')">
+                <div class="actions">
+                    <i class="fas fa-user-plus" onclick="toggleModal('search-modal')"></i>
+                    <i class="fas fa-ellipsis-v"></i>
                 </div>
-                <i class="fas fa-cog" style="cursor:pointer; color:#777;" onclick="openProfile()"></i>
             </div>
-
-            <div class="nav-tabs">
-                <div class="nav-tab active" onclick="switchTab('friends')">Friends</div>
-                <div class="nav-tab" onclick="switchTab('chats')">Chats</div>
-                <div class="nav-tab" onclick="switchTab('requests')">Requests</div>
-                <div class="nav-tab" onclick="switchTab('find')">Find</div>
+            <div class="search-box">
+                <input type="text" placeholder="Search chats...">
             </div>
-
-            <div class="list-container" id="list-content">
-                </div>
+            <div class="chat-list" id="chat-list-container"></div>
         </div>
 
-        <div class="chat-area">
-            <div id="no-chat" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#ccc;">
-                <i class="fas fa-paper-plane" style="font-size: 50px; margin-bottom:20px; color:#e1e5e9;"></i>
-                <h3>Select a conversation</h3>
+        <div class="main-chat">
+            <div class="chat-header" id="active-chat-header" style="display: none;">
+                <img src="" id="active-avatar" class="avatar">
+                <div style="flex:1">
+                    <h4 id="active-name">User Name</h4>
+                    <span id="active-status" style="font-size: 11px; color: #666;">offline</span>
+                </div>
+                <div class="chat-actions">
+                    <i class="fas fa-trash" onclick="deleteFriend()"></i>
+                    <i class="fas fa-image" onclick="toggleModal('bg-modal')"></i>
+                </div>
             </div>
 
-            <div id="active-chat" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-                <div class="chat-header">
-                    <img id="chat-header-img" src="" style="width:40px; height:40px; border-radius:50%;">
-                    <div>
-                        <h4 id="chat-header-name">User</h4>
-                        <small id="typing-indicator" style="color:#667eea; display:none;">typing...</small>
-                    </div>
+            <div class="messages-area" id="messages-container">
                 </div>
 
-                <div id="messages-box" class="messages-box"></div>
-
-                <form class="input-area" onsubmit="sendMessage(event)">
-                    <input type="text" id="msg-input" class="input-field" placeholder="Type a message..." autocomplete="off">
-                    <button type="submit" class="send-btn-circle"><i class="fas fa-paper-plane"></i></button>
-                </form>
+            <div class="input-area" id="chat-input-row" style="display: none;">
+                <i class="far fa-smile"></i>
+                <input type="text" id="message-input" placeholder="Type a message...">
+                <button class="btn-send" id="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 
-    <div id="profile-modal" class="modal">
+    <div class="modal" id="profile-modal">
         <div class="modal-content">
-            <h3 style="margin-bottom:20px;">Edit Profile</h3>
-            <span style="position:absolute; top:15px; right:20px; cursor:pointer;" onclick="closeModal()">?</span>
-            
-            <input type="text" id="edit-name" class="form-control" placeholder="Name">
-            <input type="text" id="edit-bio" class="form-control" placeholder="Bio">
-            <input type="password" id="edit-pass" class="form-control" placeholder="New Password (Optional)">
-            
-            <button class="btn" onclick="saveProfile()">Save Changes</button>
-            <button class="btn" style="background:#ff4b4b; margin-top:10px;" onclick="logout()">Logout</button>
+            <h3>Edit Profile</h3><br>
+            <div class="form-group">
+                <label>Profile Picture</label>
+                <input type="file" id="new-avatar" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="new-name">
+            </div>
+            <div class="form-group">
+                <label>Bio</label>
+                <input type="text" id="new-bio">
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="new-password">
+            </div>
+            <button onclick="updateProfile()" class="btn-send" style="width:100%; border-radius:5px;">Save Changes</button>
+            <button onclick="toggleModal('profile-modal')" style="width:100%; margin-top:10px; background:none; border:none; cursor:pointer;">Cancel</button>
         </div>
     </div>
 
     <script>
-        const API_URL = '/api';
         const socket = io();
-        let token = localStorage.getItem('token');
         let currentUser = null;
-        let currentChatId = null;
-        let typingTimeout;
+        let activeChat = null;
+        let token = localStorage.getItem('token');
+        let isSending = false; // Prevent multiple clicks
 
-        // --- AUTH LOGIC ---
-        
-        // Check if already logged in
+        async function handleAuth() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-pass').value;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, password})
+            });
+            const data = await res.json();
+            if(data.token) {
+                localStorage.setItem('token', data.token);
+                location.reload();
+            }
+        }
+
         if(token) {
-            initApp();
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+            loadApp();
         }
 
-        function toggleAuth() {
-            const isLogin = document.getElementById('reg-name').classList.contains('hidden');
-            const title = document.getElementById('auth-title');
-            const submitBtn = document.getElementById('submit-btn');
-            const switchText = document.getElementById('switch-text');
-            const switchLink = document.querySelector('.switch-link');
-
-            if (isLogin) {
-                // Switch to Register
-                document.getElementById('reg-name').classList.remove('hidden');
-                document.getElementById('reg-username').classList.remove('hidden');
-                title.innerText = 'Create Account';
-                submitBtn.innerText = 'Register';
-                switchText.innerText = 'Already have an account?';
-                switchLink.innerText = 'Login';
-            } else {
-                // Switch to Login
-                document.getElementById('reg-name').classList.add('hidden');
-                document.getElementById('reg-username').classList.add('hidden');
-                title.innerText = 'Login';
-                submitBtn.innerText = 'Login';
-                switchText.innerText = "Don't have an account?";
-                switchLink.innerText = 'Register';
-            }
+        async function loadApp() {
+            // Get My Info
+            const res = await fetch('/api/chats', { headers: {'Authorization': `Bearer ${token}`} });
+            const chats = await res.json();
+            renderChats(chats);
+            socket.emit('join', parseJwt(token).userId);
         }
 
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const isRegister = !document.getElementById('reg-name').classList.contains('hidden');
-            const endpoint = isRegister ? '/register' : '/login';
-            
-            const payload = {
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value
-            };
-
-            if (isRegister) {
-                payload.name = document.getElementById('reg-name').value;
-                payload.username = document.getElementById('reg-username').value;
-            }
-
-            try {
-                const res = await fetch(API_URL + endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    token = data.token;
-                    initApp();
-                } else {
-                    alert(data.error || 'Authentication failed');
-                }
-            } catch (err) {
-                alert('Server Error');
-            }
-        });
-
-        // --- APP INITIALIZATION ---
-
-        async function initApp() {
-            // UI Switch
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('app-box').style.display = 'flex'; // Use Flex for layout
-
-            // Fetch User Profile
-            const res = await fetch(API_URL + '/profile', { 
-                method: 'PUT', // Using PUT just to get data as per your server structure
-                headers: { 'Authorization': `Bearer ${token}` } 
-            });
-            const data = await res.json();
-            currentUser = data.user;
-
-            // Set Sidebar Data
-            document.getElementById('my-name-display').innerText = currentUser.name;
-            document.getElementById('my-username-display').innerText = currentUser.username;
-            document.getElementById('my-avatar-img').src = currentUser.avatar || 'https://via.placeholder.com/50';
-
-            // Connect Socket
-            socket.emit('join_user', currentUser._id);
-            setupSocketListeners();
-
-            // Load Friends by default
-            switchTab('friends');
-        }
-
-        function logout() {
-            localStorage.clear();
-            location.reload();
-        }
-
-        // --- SIDEBAR TABS & LISTS ---
-
-        async function switchTab(tabName) {
-            // Update Tab UI
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active'); // "event" is implicit in onclick
-            
-            const listDiv = document.getElementById('list-content');
-            listDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#999;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-
-            if (tabName === 'find') {
-                renderFindTab();
-                return;
-            }
-
-            // Fetch Data based on tab
-            let endpoint = '';
-            if (tabName === 'friends') endpoint = '/friends';
-            if (tabName === 'chats') endpoint = '/chats';
-            if (tabName === 'requests') endpoint = '/friend-requests/received';
-
-            const res = await fetch(API_URL + endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            
-            listDiv.innerHTML = '';
-            if (!data || data.length === 0) {
-                listDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Nothing found here.</div>';
-                return;
-            }
-
-            data.forEach(item => {
-                const el = document.createElement('div');
-                el.className = 'list-item';
-                
-                if (tabName === 'requests') {
-                    // Render Request Item
-                    el.innerHTML = `
-                        <img src="${item.sender.avatar || 'https://via.placeholder.com/40'}" class="item-avatar">
-                        <div class="item-info" style="flex:1;">
-                            <h4>${item.sender.name}</h4>
-                            <p>${item.sender.username}</p>
+        function renderChats(chats) {
+            const container = document.getElementById('chat-list-container');
+            container.innerHTML = chats.map(chat => {
+                const other = chat.participants.find(p => p.username !== currentUser?.username);
+                return `
+                    <div class="chat-item" onclick="openChat('${chat._id}', '${other.name}', '${other.avatar}')">
+                        <img src="${other.avatar || '/uploads/default.png'}" class="avatar">
+                        <div class="info">
+                            <h4>${other.name}</h4>
+                            <p>${chat.lastMessage?.text || 'No messages'}</p>
                         </div>
-                        <button class="req-btn btn-accept" onclick="handleReq('${item._id}', 'accept')">Accept</button>
-                        <button class="req-btn btn-reject" onclick="handleReq('${item._id}', 'reject')">Reject</button>
-                    `;
-                } else {
-                    // Render Friend/Chat Item
-                    const u = (tabName === 'chats') ? item.participants.find(p => p._id !== currentUser._id) : item;
-                    const subtext = (tabName === 'chats' && item.lastMessage) ? item.lastMessage.text : (u.bio || u.username);
-                    
-                    el.onclick = () => openChat(item._id, u); // Pass chat ID if exists
-                    el.innerHTML = `
-                        <img src="${u.avatar || 'https://via.placeholder.com/40'}" class="item-avatar">
-                        <div class="item-info">
-                            <h4>${u.name}</h4>
-                            <p>${subtext}</p>
-                        </div>
-                    `;
-                }
-                listDiv.appendChild(el);
-            });
-        }
-
-        // --- FIND / SEARCH TAB ---
-        function renderFindTab() {
-            const container = document.getElementById('list-content');
-            container.innerHTML = `
-                <div style="padding:15px;">
-                    <input type="text" class="form-control" placeholder="Search by @username..." onkeyup="if(event.key==='Enter') searchUsers(this.value)">
-                    <small style="color:#777;">Press Enter to search exact username.</small>
-                </div>
-                <div id="search-results"></div>
-            `;
-        }
-
-        async function searchUsers(query) {
-            const res = await fetch(`${API_URL}/users/search?q=${query}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const users = await res.json();
-            const resDiv = document.getElementById('search-results');
-            resDiv.innerHTML = '';
-            
-            if (users.length === 0) {
-                resDiv.innerHTML = '<p style="text-align:center; color:#999; margin-top:10px;">User not found</p>';
-                return;
-            }
-
-            users.forEach(u => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `
-                    <img src="${u.avatar || 'https://via.placeholder.com/40'}" class="item-avatar">
-                    <div class="item-info" style="flex:1;">
-                        <h4>${u.name}</h4>
-                        <p>${u.username}</p>
                     </div>
-                    <button class="req-btn" style="background:#667eea;" onclick="sendReq('${u._id}')">Add</button>
                 `;
-                resDiv.appendChild(div);
-            });
+            }).join('');
         }
 
-        async function sendReq(userId) {
-            await fetch(API_URL + '/friend-requests/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ receiverId: userId })
-            });
-            alert('Request Sent!');
-        }
-
-        async function handleReq(reqId, action) {
-            await fetch(`${API_URL}/friend-requests/${reqId}/${action}`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            switchTab('requests'); // Refresh list
-        }
-
-        // --- CHAT LOGIC ---
-
-        async function openChat(chatId, user) {
-            // Prepare UI
-            document.getElementById('no-chat').classList.add('hidden');
-            const activeDiv = document.getElementById('active-chat');
-            activeDiv.classList.remove('hidden');
+        async function openChat(chatId, name, avatar) {
+            activeChat = chatId;
+            document.getElementById('active-chat-header').style.display = 'flex';
+            document.getElementById('chat-input-row').style.display = 'flex';
+            document.getElementById('active-name').innerText = name;
+            document.getElementById('active-avatar').src = avatar || '/uploads/default.png';
             
-            document.getElementById('chat-header-name').innerText = user.name;
-            document.getElementById('chat-header-img').src = user.avatar || 'https://via.placeholder.com/40';
-
-            // Create Chat ID if friend click (not existing chat)
-            if (!chatId) {
-                const res = await fetch(API_URL + '/chats', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ userId: user._id })
-                });
-                const chatData = await res.json();
-                chatId = chatData._id;
-            }
-
-            currentChatId = chatId;
             socket.emit('join_chat', chatId);
             loadMessages(chatId);
         }
 
         async function loadMessages(chatId) {
-            const box = document.getElementById('messages-box');
-            box.innerHTML = ''; // Clear previous
-            const res = await fetch(`${API_URL}/chats/${chatId}/messages`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const res = await fetch(`/api/chats/${chatId}/messages`, {
+                headers: {'Authorization': `Bearer ${token}`}
+            });
             const messages = await res.json();
-            messages.forEach(addMessageToUI);
-            box.scrollTop = box.scrollHeight;
+            const container = document.getElementById('messages-container');
+            container.innerHTML = messages.map(msg => renderMessage(msg)).join('');
+            container.scrollTop = container.scrollHeight;
         }
 
-        function addMessageToUI(msg) {
-            const box = document.getElementById('messages-box');
-            const isMe = msg.sender._id === currentUser._id || msg.sender === currentUser._id; // Handle populated vs unpopulated
-            
-            const div = document.createElement('div');
-            div.className = `msg ${isMe ? 'sent' : 'received'}`;
-            div.innerText = msg.text;
-            
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
+        function renderMessage(msg) {
+            const isMe = msg.sender === parseJwt(token).userId;
+            let ticks = '';
+            if(isMe) {
+                const tickClass = msg.status === 'seen' ? 'seen' : '';
+                const icon = msg.status === 'sent' ? 'fa-check' : 'fa-check-double';
+                ticks = `<i class="fas ${icon} tick ${tickClass}"></i>`;
+            }
+
+            return `
+                <div class="msg ${isMe ? 'sent' : 'received'}" id="msg-${msg._id}">
+                    ${msg.text}
+                    <div class="msg-meta">
+                        ${msg.edited ? '<span class="edited-tag">edited</span>' : ''}
+                        ${new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        ${ticks}
+                    </div>
+                </div>
+            `;
         }
 
-        async function sendMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('msg-input');
+        async function sendMessage() {
+            if(isSending) return;
+            const input = document.getElementById('message-input');
             const text = input.value.trim();
-            if (!text || !currentChatId) return;
+            if(!text) return;
 
-            input.value = '';
-            
-            // Optimistic UI update (optional, but good for speed)
-            // addMessageToUI({ text: text, sender: { _id: currentUser._id } }); 
+            isSending = true;
+            document.getElementById('send-btn').disabled = true;
 
-            await fetch(API_URL + '/messages', {
+            const res = await fetch('/api/messages', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ chatId: currentChatId, text })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ chatId: activeChat, text })
             });
 
-            socket.emit('stop_typing', { chatId: currentChatId });
+            if(res.ok) {
+                input.value = '';
+                // Message will be added via Socket
+            }
+            isSending = false;
+            document.getElementById('send-btn').disabled = false;
         }
 
-        // --- SOCKET LISTENING ---
-        function setupSocketListeners() {
-            socket.on('new_message', (msg) => {
-                if (currentChatId === msg.chat) {
-                    addMessageToUI(msg);
-                }
-            });
+        // Socket Listeners
+        socket.on('new_message', (msg) => {
+            if(msg.chat === activeChat) {
+                const container = document.getElementById('messages-container');
+                container.insertAdjacentHTML('beforeend', renderMessage(msg));
+                container.scrollTop = container.scrollHeight;
+            }
+        });
 
-            // Typing Indicators
-            const input = document.getElementById('msg-input');
-            input.addEventListener('input', () => {
-                socket.emit('typing', { chatId: currentChatId });
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => socket.emit('stop_typing', { chatId: currentChatId }), 1000);
-            });
+        socket.on('message_deleted', (msgId) => {
+            document.getElementById(`msg-${msgId}`)?.remove();
+        });
 
-            socket.on('typing', () => {
-                document.getElementById('typing-indicator').style.display = 'block';
-            });
-            socket.on('stop_typing', () => {
-                document.getElementById('typing-indicator').style.display = 'none';
-            });
+        // Utility: Parse JWT
+        function parseJwt(token) {
+            try { return JSON.parse(atob(token.split('.')[1])); } catch (e) { return null; }
         }
 
-        // --- PROFILE MODAL ---
-        function openProfile() {
-            document.getElementById('profile-modal').style.display = 'flex';
-            document.getElementById('edit-name').value = currentUser.name;
-            document.getElementById('edit-bio').value = currentUser.bio || '';
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
-        function closeModal() { document.getElementById('profile-modal').style.display = 'none'; }
-        
-        async function saveProfile() {
-            const name = document.getElementById('edit-name').value;
-            const bio = document.getElementById('edit-bio').value;
-            const pass = document.getElementById('edit-pass').value;
 
-            const body = { name, bio };
-            if(pass) body.newPassword = pass;
+        async function updateProfile() {
+            const formData = new FormData();
+            formData.append('name', document.getElementById('new-name').value);
+            formData.append('bio', document.getElementById('new-bio').value);
+            const pass = document.getElementById('new-password').value;
+            if(pass) formData.append('password', pass);
+            const file = document.getElementById('new-avatar').files[0];
+            if(file) formData.append('avatar', file);
 
-            await fetch(API_URL + '/profile', {
+            await fetch('/api/profile', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(body)
+                headers: {'Authorization': `Bearer ${token}`},
+                body: formData
             });
             location.reload();
         }
