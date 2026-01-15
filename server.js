@@ -13,41 +13,30 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io Setup
 const io = socketIo(server, {
-    cors: {
-        origin: "*", 
-        methods: ["GET", "POST"]
-    }
+    cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serving Static Files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/learnox';
-mongoose.connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB Connected Successfully'))
-.catch(err => console.error('MongoDB Connection Error:', err));
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB Connected'))
+    .catch(err => console.error(err));
 
 // --- MODELS ---
-
 const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true }, // NEW: Unique ID
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     avatar: { type: String },
-    status: { type: String, default: 'offline' }, // online, offline
-    chatBackground: { type: String, default: 'default' },
-    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // New: Blocking logic
+    status: { type: String, default: 'offline' },
+    lastSeen: { type: Date, default: Date.now },
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -61,8 +50,6 @@ const FriendRequestSchema = new mongoose.Schema({
 const ChatSchema = new mongoose.Schema({
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
-    // Removed unreadCount Map to calculate dynamically for accuracy
-    createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
 
@@ -70,11 +57,10 @@ const MessageSchema = new mongoose.Schema({
     chat: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat', required: true },
     sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     text: { type: String, required: true },
-    status: { type: String, enum: ['sending', 'sent', 'delivered', 'seen'], default: 'sending' },
+    status: { type: String, enum: ['sent', 'delivered', 'seen'], default: 'sent' }, // Ticks logic
     edited: { type: Boolean, default: false },
     deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -82,62 +68,29 @@ const FriendRequest = mongoose.model('FriendRequest', FriendRequestSchema);
 const Chat = mongoose.model('Chat', ChatSchema);
 const Message = mongoose.model('Message', MessageSchema);
 
-// File Upload Setup
+// File Upload
 const uploadDir = 'uploads/avatars/';
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: function (req, file, cb) {
-        const filetypes = /jpeg|jpg|png|gif/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        if (mimetype && extname) return cb(null, true);
-        cb(new Error('Only image files are allowed'));
-    }
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, uploadDir),
+        filename: (req, file, cb) => cb(null, `avatar-${Date.now()}${path.extname(file.originalname)}`)
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'learnox-super-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'learnox-secret';
 
-// --- AUTH MIDDLEWARE ---
+// Auth Middleware
 const authenticate = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
         if (!token) throw new Error();
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('-password');
-        if (!user) throw new Error();
-        req.user = user;
-        req.token = token;
+        req.user = await User.findById(decoded.userId).select('-password');
+        if (!req.user) throw new Error();
         next();
-    } catch (error) {
-        res.status(401).json({ error: 'Please authenticate' });
-    }
-};
-
-const authorizeChatAccess = async (req, res, next) => {
-    try {
-        const chat = await Chat.findById(req.params.chatId);
-        if (!chat) return res.status(404).json({ error: 'Chat not found' });
-        if (!chat.participants.includes(req.user._id)) return res.status(403).json({ error: 'Access denied' });
-        req.chat = chat;
-        next();
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
+    } catch (e) { res.status(401).json({ error: 'Auth failed' }); }
 };
 
 // --- SOCKET LOGIC ---
@@ -145,326 +98,290 @@ const userSockets = new Map(); // userId -> socketId
 
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
-    if (!token) return next(new Error('Authentication error'));
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        socket.userId = decoded.userId;
-        next();
-    } catch (error) {
-        next(new Error('Authentication error'));
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            socket.userId = decoded.userId;
+            return next();
+        } catch(e) {}
     }
+    next(new Error('Auth error'));
 });
 
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.userId);
-    
-    socket.join(socket.userId);
+io.on('connection', async (socket) => {
+    console.log(`User connected: ${socket.userId}`);
     userSockets.set(socket.userId, socket.id);
+    socket.join(socket.userId); // Join personal room
 
-    User.findByIdAndUpdate(socket.userId, { status: 'online' }).then(() => {
-        io.emit('user_status_changed', { userId: socket.userId, status: 'online' });
-    });
+    // 1. Set User Online
+    await User.findByIdAndUpdate(socket.userId, { status: 'online' });
+    io.emit('user_status', { userId: socket.userId, status: 'online' });
 
-    socket.on('join_chat', (chatId) => {
+    // 2. Deliver Pending Messages (Grey Tick -> Double Grey Tick)
+    // Find messages sent TO this user that are 'sent' and mark 'delivered'
+    const pendingMsgs = await Message.find({ 
+        sender: { $ne: socket.userId }, 
+        status: 'sent',
+        // We need to find chats where this user is a participant. 
+        // For simplicity, we assume if you are socket.userId, you receive messages in your chats.
+    }).populate('chat');
+
+    // Efficiently update status
+    for (let msg of pendingMsgs) {
+        if (msg.chat.participants.includes(socket.userId)) {
+            msg.status = 'delivered';
+            await msg.save();
+            // Notify the SENDER that message is delivered
+            const senderSocket = userSockets.get(msg.sender.toString());
+            if (senderSocket) io.to(senderSocket).emit('msg_status_update', { msgId: msg._id, status: 'delivered', chatId: msg.chat._id });
+        }
+    }
+
+    // Join Chat Room
+    socket.on('join_chat', async (chatId) => {
         socket.join(chatId);
+        // Mark messages in this chat as SEEN (Double Blue Tick)
+        await Message.updateMany(
+            { chat: chatId, sender: { $ne: socket.userId }, status: { $ne: 'seen' } },
+            { status: 'seen' }
+        );
+        // Notify other participants in this chat
+        socket.to(chatId).emit('msgs_seen', { chatId });
     });
 
-    socket.on('typing', (data) => {
-        socket.to(data.chatId).emit('typing', data);
-    });
+    socket.on('typing_start', (data) => socket.to(data.chatId).emit('typing_start', { chatId: data.chatId, userId: socket.userId }));
+    socket.on('typing_stop', (data) => socket.to(data.chatId).emit('typing_stop', { chatId: data.chatId, userId: socket.userId }));
 
     socket.on('disconnect', async () => {
         userSockets.delete(socket.userId);
-        await User.findByIdAndUpdate(socket.userId, { status: 'offline' });
-        io.emit('user_status_changed', { userId: socket.userId, status: 'offline' });
+        await User.findByIdAndUpdate(socket.userId, { status: 'offline', lastSeen: Date.now() });
+        io.emit('user_status', { userId: socket.userId, status: 'offline', lastSeen: Date.now() });
     });
 });
 
 // --- API ROUTES ---
 
-// Auth
+// 1. Auth & Profile
 app.post('/api/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        if(await User.findOne({ email })) return res.status(400).json({ error: 'User already exists' });
-        
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ name, email, password: hashedPassword });
+        const { username, name, email, password } = req.body;
+        if (await User.findOne({ $or: [{ email }, { username }] })) return res.status(400).json({ error: 'Email or Username already taken' });
+        const user = new User({ username, name, email, password: await bcrypt.hash(password, 10) });
         await user.save();
-        
-        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar } });
-    } catch (error) { res.status(500).json({ error: 'Registration failed' }); }
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '30d' });
+        res.json({ token, user });
+    } catch (e) { res.status(500).json({ error: 'Register failed' }); }
 });
 
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, status: user.status } });
-    } catch (error) { res.status(500).json({ error: 'Login failed' }); }
+        if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials' });
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '30d' });
+        res.json({ token, user });
+    } catch (e) { res.status(500).json({ error: 'Login failed' }); }
 });
 
-// Profile
 app.put('/api/profile', authenticate, upload.single('avatar'), async (req, res) => {
     try {
         const { name, currentPassword, newPassword } = req.body;
         const user = req.user;
-
-        if (!(await bcrypt.compare(currentPassword, user.password))) {
-            return res.status(401).json({ error: 'Current password incorrect' });
-        }
-
+        if (currentPassword && !(await bcrypt.compare(currentPassword, user.password))) return res.status(401).json({ error: 'Wrong password' });
         if (name) user.name = name;
-        // Email change removed for security as requested
-        
         if (newPassword) user.password = await bcrypt.hash(newPassword, 10);
-        
-        if (req.file) {
-            if (user.avatar && user.avatar.startsWith('/uploads')) {
-                const oldPath = path.join(__dirname, user.avatar.substring(1));
-                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-            }
-            user.avatar = `/uploads/avatars/${req.file.filename}`;
-        }
+        if (req.file) user.avatar = `/uploads/avatars/${req.file.filename}`;
         await user.save();
-        res.json({ user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, status: user.status } });
-    } catch (error) { res.status(500).json({ error: 'Update failed' }); }
+        res.json({ user });
+    } catch (e) { res.status(500).json({ error: 'Update failed' }); }
 });
 
-// View Other Profile
-app.get('/api/users/:userId', authenticate, async (req, res) => {
+// 2. Friends & Users
+app.get('/api/users/search', authenticate, async (req, res) => {
     try {
-        const user = await User.findById(req.params.userId).select('name email avatar status createdAt');
-        if (!user) return res.status(404).json({ error: 'User not found' });
-        res.json(user);
-    } catch (error) { res.status(500).json({ error: 'Error fetching profile' }); }
-});
-
-// Friends & Blocking
-app.get('/api/friends', authenticate, async (req, res) => {
-    try {
-        const requests = await FriendRequest.find({
-            $or: [ { sender: req.user._id, status: 'accepted' }, { receiver: req.user._id, status: 'accepted' } ]
-        }).populate('sender receiver', 'name email avatar status');
-
-        // Filter out blocked users
-        const blockedIds = req.user.blockedUsers.map(id => id.toString());
+        const q = req.query.q || '';
+        if (q.length < 2) return res.json([]);
         
-        const friends = requests.map(reqData => {
-            const friend = reqData.sender._id.equals(req.user._id) ? reqData.receiver : reqData.sender;
-            return friend;
-        }).filter(f => !blockedIds.includes(f._id.toString()));
+        // Find users matching username/email
+        const users = await User.find({
+            _id: { $ne: req.user._id },
+            username: { $regex: q, $options: 'i' }
+        }).select('name username avatar');
 
-        const formattedFriends = friends.map(f => ({
-            id: f._id, name: f.name, email: f.email, avatar: f.avatar, status: f.status
+        // Check friendship status for each result
+        const results = await Promise.all(users.map(async (u) => {
+            const reqStatus = await FriendRequest.findOne({
+                $or: [
+                    { sender: req.user._id, receiver: u._id },
+                    { sender: u._id, receiver: req.user._id }
+                ]
+            });
+            return { ...u.toObject(), requestStatus: reqStatus ? reqStatus.status : 'none', requestId: reqStatus?._id };
         }));
-        res.json(formattedFriends);
-    } catch (error) { res.status(500).json({ error: 'Fetch friends failed' }); }
+
+        res.json(results);
+    } catch (e) { res.status(500).json({ error: 'Search failed' }); }
 });
 
-app.post('/api/users/block/:userId', authenticate, async (req, res) => {
-    try {
-        const userIdToBlock = req.params.userId;
-        if (!req.user.blockedUsers.includes(userIdToBlock)) {
-            req.user.blockedUsers.push(userIdToBlock);
-            await req.user.save();
-        }
-        res.json({ message: 'User blocked' });
-    } catch (error) { res.status(500).json({ error: 'Block failed' }); }
-});
-
-app.delete('/api/friends/:friendId', authenticate, async (req, res) => {
-    try {
-        const friendId = req.params.friendId;
-        await FriendRequest.deleteMany({
-            $or: [
-                { sender: req.user._id, receiver: friendId },
-                { sender: friendId, receiver: req.user._id }
-            ]
-        });
-        // Optionally delete chat or keep it
-        res.json({ message: 'Friend removed' });
-    } catch (error) { res.status(500).json({ error: 'Remove friend failed' }); }
-});
-
-// Friend Requests
-app.post('/api/friend-requests/send', authenticate, async (req, res) => {
+app.post('/api/friend-request', authenticate, async (req, res) => {
     try {
         const { receiverId } = req.body;
-        // Check if blocked
-        const receiver = await User.findById(receiverId);
-        if (receiver.blockedUsers.includes(req.user._id)) return res.status(403).json({ error: 'Cannot send request' });
+        const exists = await FriendRequest.findOne({ $or: [{ sender: req.user._id, receiver: receiverId }, { sender: receiverId, receiver: req.user._id }] });
+        if (exists) return res.status(400).json({ error: 'Request already exists' });
         
-        const existing = await FriendRequest.findOne({
-            $or: [ { sender: req.user._id, receiver: receiverId }, { sender: receiverId, receiver: req.user._id } ]
-        });
-        if (existing) return res.status(400).json({ error: 'Request exists or already friends' });
-
-        const request = new FriendRequest({ sender: req.user._id, receiver: receiverId });
-        await request.save();
-        await request.populate('sender', 'name email');
-
+        const newReq = await FriendRequest.create({ sender: req.user._id, receiver: receiverId });
+        await newReq.populate('sender', 'name username avatar');
+        
         const sock = userSockets.get(receiverId);
-        if (sock) io.to(sock).emit('friend_request_received', { _id: request._id, senderName: request.sender.name, sender: request.sender });
+        if (sock) io.to(sock).emit('new_friend_request', newReq);
         
-        res.json(request);
-    } catch (error) { res.status(500).json({ error: 'Request failed' }); }
+        res.json(newReq);
+    } catch (e) { res.status(500).json({ error: 'Failed' }); }
 });
 
-app.get('/api/friend-requests/received', authenticate, async (req, res) => {
+app.post('/api/friend-request/respond', authenticate, async (req, res) => {
     try {
-        const requests = await FriendRequest.find({ receiver: req.user._id, status: 'pending' }).populate('sender', 'name email avatar');
-        res.json(requests);
-    } catch (error) { res.status(500).json({ error: 'Fetch failed' }); }
-});
-
-app.post('/api/friend-requests/:requestId/:action', authenticate, async (req, res) => {
-    try {
-        const { action } = req.params; // accept or reject
-        const request = await FriendRequest.findById(req.params.requestId);
-        if (!request) return res.status(404).json({ error: 'Not found' });
+        const { requestId, action } = req.body; // action: 'accepted' or 'rejected'
+        const freq = await FriendRequest.findById(requestId);
+        if (!freq) return res.status(404).json({ error: 'Not found' });
         
-        if (action === 'accept') {
-            request.status = 'accepted';
-            await request.save();
-            const sock = userSockets.get(request.sender.toString());
-            if (sock) io.to(sock).emit('friend_request_accepted', { acceptorName: req.user.name });
-        } else {
-            request.status = 'rejected';
-            await request.save();
+        freq.status = action;
+        await freq.save();
+
+        if (action === 'accepted') {
+            const sock = userSockets.get(freq.sender.toString());
+            if (sock) io.to(sock).emit('request_accepted', { friendName: req.user.name });
         }
-        res.json(request);
-    } catch (error) { res.status(500).json({ error: 'Action failed' }); }
+        res.json(freq);
+    } catch (e) { res.status(500).json({ error: 'Failed' }); }
 });
 
-// Chats
+app.get('/api/friends', authenticate, async (req, res) => {
+    try {
+        const friends = await FriendRequest.find({
+            $or: [{ sender: req.user._id }, { receiver: req.user._id }],
+            status: 'accepted'
+        }).populate('sender receiver', 'name username avatar status lastSeen');
+        
+        const list = friends.map(f => {
+            const u = f.sender._id.equals(req.user._id) ? f.receiver : f.sender;
+            return { _id: u._id, name: u.name, username: u.username, avatar: u.avatar, status: u.status, lastSeen: u.lastSeen };
+        });
+        res.json(list);
+    } catch (e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+app.post('/api/block', authenticate, async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!req.user.blockedUsers.includes(userId)) {
+            req.user.blockedUsers.push(userId);
+            await req.user.save();
+        }
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
+});
+
+// 3. Chats
 app.get('/api/chats', authenticate, async (req, res) => {
     try {
-        const chats = await Chat.find({ participants: req.user._id })
-            .populate('participants', 'name email avatar status')
+        let chats = await Chat.find({ participants: req.user._id })
+            .populate('participants', 'name username avatar status lastSeen')
             .populate('lastMessage')
             .sort({ updatedAt: -1 });
 
-        const chatsWithData = await Promise.all(chats.map(async (chat) => {
-            const unread = await Message.countDocuments({
-                chat: chat._id, sender: { $ne: req.user._id }, status: { $in: ['sent', 'delivered'] }
-            });
-            return { ...chat.toObject(), unreadCount: unread };
+        const data = await Promise.all(chats.map(async c => {
+            const unread = await Message.countDocuments({ chat: c._id, sender: { $ne: req.user._id }, status: { $ne: 'seen' } });
+            return { ...c.toObject(), unreadCount: unread };
         }));
-        res.json(chatsWithData);
-    } catch (error) { res.status(500).json({ error: 'Fetch chats failed' }); }
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/chats', authenticate, async (req, res) => {
     try {
-        const { userId } = req.body;
-        // Check if friend
-        const isFriend = await FriendRequest.findOne({
-            $or: [ { sender: req.user._id, receiver: userId, status: 'accepted' }, { sender: userId, receiver: req.user._id, status: 'accepted' } ]
-        });
-        if (!isFriend) return res.status(403).json({ error: 'Friends only' });
-
-        let chat = await Chat.findOne({ participants: { $all: [req.user._id, userId] } });
-        if (!chat) {
-            chat = new Chat({ participants: [req.user._id, userId] });
-            await chat.save();
-        }
-        await chat.populate('participants', 'name email avatar status');
+        const { targetId } = req.body;
+        let chat = await Chat.findOne({ participants: { $all: [req.user._id, targetId] } });
+        if (!chat) chat = await Chat.create({ participants: [req.user._id, targetId] });
+        await chat.populate('participants', 'name username avatar status');
         res.json(chat);
-    } catch (error) { res.status(500).json({ error: 'Create chat failed' }); }
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.get('/api/chats/:chatId/messages', authenticate, authorizeChatAccess, async (req, res) => {
+app.delete('/api/chats/:chatId', authenticate, async (req, res) => {
     try {
-        const messages = await Message.find({ chat: req.params.chatId, deletedFor: { $ne: req.user._id } })
-            .populate('sender', 'name email avatar').sort({ createdAt: 1 });
-        res.json(messages);
-    } catch (error) { res.status(500).json({ error: 'Fetch messages failed' }); }
+        await Message.updateMany({ chat: req.params.chatId }, { $push: { deletedFor: req.user._id } });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/messages/:chatId', authenticate, async (req, res) => {
+    try {
+        const msgs = await Message.find({ chat: req.params.chatId, deletedFor: { $ne: req.user._id } })
+            .sort({ createdAt: 1 });
+        res.json(msgs);
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/messages', authenticate, async (req, res) => {
     try {
-        const { chatId, text } = req.body;
+        const { chatId, text, tempId } = req.body;
         const chat = await Chat.findById(chatId);
-        if (!chat || !chat.participants.includes(req.user._id)) return res.status(403).json({ error: 'Access denied' });
-
-        // Check if blocked by any participant
-        // Simplified: Assume 2 people chat. Check if other blocked me.
+        
+        // Block check
         const otherId = chat.participants.find(p => !p.equals(req.user._id));
         const otherUser = await User.findById(otherId);
-        if (otherUser && otherUser.blockedUsers.includes(req.user._id)) {
-            return res.status(403).json({ error: 'You are blocked by this user' });
-        }
+        if (otherUser.blockedUsers.includes(req.user._id)) return res.status(403).json({ error: 'Blocked' });
 
-        const message = new Message({ chat: chatId, sender: req.user._id, text, status: 'sent' });
-        await message.save();
-        
-        chat.lastMessage = message._id;
+        // Initial status: If user online -> delivered, else sent
+        const initialStatus = otherUser.status === 'online' ? 'delivered' : 'sent';
+
+        const msg = await Message.create({ chat: chatId, sender: req.user._id, text, status: initialStatus });
+        chat.lastMessage = msg._id;
         chat.updatedAt = Date.now();
         await chat.save();
-        await message.populate('sender', 'name email avatar');
 
-        io.to(chatId).emit('new_message', { ...message.toObject(), senderName: req.user.name });
+        const msgData = { ...msg.toObject(), tempId }; // Return tempId to client to replace
         
-        res.json(message);
-    } catch (error) { 
-        console.error(error);
-        res.status(500).json({ error: 'Send failed' }); 
-    }
+        // Broadcast to OTHERS (sender gets response via API)
+        socket.to(chatId).emit('new_message', msgData);
+        
+        res.json(msgData);
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.post('/api/chats/:chatId/read', authenticate, authorizeChatAccess, async (req, res) => {
+app.put('/api/messages/:id', authenticate, async (req, res) => {
     try {
-        await Message.updateMany(
-            { chat: req.chat._id, sender: { $ne: req.user._id }, status: { $in: ['sent', 'delivered'] } },
-            { status: 'seen' }
-        );
+        const msg = await Message.findByIdAndUpdate(req.params.id, { text: req.body.text, edited: true }, { new: true });
+        io.to(msg.chat.toString()).emit('message_updated', msg);
+        res.json(msg);
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.delete('/api/messages/:id', authenticate, async (req, res) => {
+    try {
+        const msg = await Message.findById(req.params.id);
+        if(msg.sender.toString() === req.user._id.toString()){
+             // If I am sender, actually delete for everyone (or add flag)
+             // Here we just hide it to simulate 'Delete for everyone'
+             msg.deletedFor = [...msg.deletedFor, ...req.user.blockedUsers]; // Hacky way or add a 'isDeleted' flag
+             await Message.deleteOne({ _id: req.params.id }); // Hard delete for simplicity requested
+             io.to(msg.chat.toString()).emit('message_deleted', { _id: req.params.id, chatId: msg.chat });
+        } else {
+            msg.deletedFor.push(req.user._id); // Delete for me
+            await msg.save();
+        }
         res.json({ success: true });
-    } catch (error) { res.status(500).json({ error: 'Read failed' }); }
+    } catch (e) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.put('/api/messages/:messageId', authenticate, async (req, res) => {
+// Search User by ID (For View Profile)
+app.get('/api/user/:id', authenticate, async (req, res) => {
     try {
-        const { text } = req.body;
-        const message = await Message.findById(req.params.messageId);
-        if (!message.sender.equals(req.user._id)) return res.status(403).json({ error: 'Denied' });
-        
-        message.text = text;
-        message.edited = true;
-        await message.save();
-        
-        io.to(message.chat.toString()).emit('message_updated', { messageId: message._id, chatId: message.chat, text: message.text, edited: true });
-        res.json(message);
-    } catch (error) { res.status(500).json({ error: 'Update failed' }); }
-});
-
-app.delete('/api/messages/:messageId', authenticate, async (req, res) => {
-    try {
-        const message = await Message.findById(req.params.messageId);
-        message.deletedFor.push(req.user._id);
-        await message.save();
-        io.to(message.chat.toString()).emit('message_deleted', { messageId: message._id, chatId: message.chat });
-        res.json({ success: true });
-    } catch (error) { res.status(500).json({ error: 'Delete failed' }); }
-});
-
-app.get('/api/users/search', authenticate, async (req, res) => {
-    try {
-        const q = req.query.q || '';
-        const users = await User.find({
-            _id: { $ne: req.user._id },
-            $or: [ { name: { $regex: q, $options: 'i' } }, { email: { $regex: q, $options: 'i' } } ]
-        }).select('name email avatar status');
-        res.json(users);
-    } catch (error) { res.status(500).json({ error: 'Search failed' }); }
+        const u = await User.findById(req.params.id).select('-password -blockedUsers');
+        res.json(u);
+    } catch (e) { res.status(404).json({ error: 'Not found' }); }
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(process.env.PORT || 3000, () => console.log('Server Running'));
