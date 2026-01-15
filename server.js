@@ -41,9 +41,23 @@ mongoose.connect(MONGO_URI, {
 // --- MODELS ---
 
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
+    username: { 
+        type: String, 
+        required: true, 
+        unique: true,
+        lowercase: true,
+        trim: true,
+        minlength: 3,
+        maxlength: 20
+    },
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { 
+        type: String, 
+        required: true, 
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
     password: { type: String, required: true },
     avatar: { type: String },
     status: { type: String, default: 'offline' },
@@ -209,6 +223,22 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('read_message', async (data) => {
+        const { chatId } = data;
+        await Message.updateMany(
+            { chat: chatId, sender: { $ne: socket.userId }, status: { $in: ['sent', 'delivered'] } },
+            { status: 'seen' }
+        );
+        
+        // Emit to all participants
+        const chat = await Chat.findById(chatId);
+        if (chat) {
+            chat.participants.forEach(participantId => {
+                io.to(participantId.toString()).emit('messages_seen', { chatId });
+            });
+        }
+    });
+
     socket.on('message_seen', async (data) => {
         const { chatId } = data;
         const messages = await Message.updateMany(
@@ -231,16 +261,24 @@ io.on('connection', (socket) => {
         if (!message) return;
         
         // Remove existing reaction from same user
-        message.reactions = message.reactions.filter(r => r.userId.toString() !== socket.userId);
+        const existingIndex = message.reactions.findIndex(r => 
+            r.userId.toString() === socket.userId
+        );
+        
+        if (existingIndex > -1) {
+            message.reactions.splice(existingIndex, 1);
+        }
         
         // Add new reaction
         message.reactions.push({ userId: socket.userId, emoji });
         await message.save();
         
+        // Populate userId
+        await message.populate('reactions.userId', 'name');
+        
         io.to(message.chat.toString()).emit('reaction_added', {
             messageId,
-            userId: socket.userId,
-            emoji
+            reaction: message.reactions[message.reactions.length - 1]
         });
         
         // Update chat timestamp
@@ -252,7 +290,9 @@ io.on('connection', (socket) => {
         const message = await Message.findById(messageId);
         if (!message) return;
         
-        message.reactions = message.reactions.filter(r => r.userId.toString() !== socket.userId);
+        message.reactions = message.reactions.filter(r => 
+            r.userId.toString() !== socket.userId
+        );
         await message.save();
         
         io.to(message.chat.toString()).emit('reaction_removed', {
@@ -278,20 +318,35 @@ app.post('/api/register', async (req, res) => {
     try {
         const { username, name, email, password } = req.body;
         
+        // Validate username format
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+            return res.status(400).json({ 
+                error: 'Username must be 3-20 characters and can only contain letters, numbers, and underscores' 
+            });
+        }
+        
         // Check if username already exists
         const existingUser = await User.findOne({ 
-            $or: [{ username }, { email }] 
+            $or: [
+                { username: username.toLowerCase() }, 
+                { email: email.toLowerCase() }
+            ] 
         });
         
         if(existingUser) {
             return res.status(400).json({ 
-                error: existingUser.username === username ? 
+                error: existingUser.username === username.toLowerCase() ? 
                     'Username already exists' : 'Email already exists' 
             });
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ username, name, email, password: hashedPassword });
+        const user = new User({ 
+            username: username.toLowerCase(), 
+            name, 
+            email: email.toLowerCase(), 
+            password: hashedPassword 
+        });
         await user.save();
         
         const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
@@ -306,7 +361,7 @@ app.post('/api/register', async (req, res) => {
             } 
         });
     } catch (error) { 
-        console.error(error);
+        console.error('Registration error:', error);
         res.status(500).json({ error: 'Registration failed' }); 
     }
 });
@@ -314,7 +369,12 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ 
+            $or: [
+                { username: username.toLowerCase() },
+                { email: username.toLowerCase() }
+            ]
+        });
         
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -333,7 +393,7 @@ app.post('/api/login', async (req, res) => {
             } 
         });
     } catch (error) { 
-        console.error(error);
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' }); 
     }
 });
@@ -350,28 +410,34 @@ app.put('/api/profile', authenticate, upload.single('avatar'), async (req, res) 
 
         if (name) user.name = name;
         
-        if (newPassword) user.password = await bcrypt.hash(newPassword, 10);
+        if (newPassword && newPassword.trim().length >= 6) {
+            user.password = await bcrypt.hash(newPassword, 10);
+        }
         
         if (req.file) {
             if (user.avatar && user.avatar.startsWith('/uploads')) {
                 const oldPath = path.join(__dirname, user.avatar.substring(1));
-                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                if (fs.existsSync(oldPath)) {
+                    fs.unlinkSync(oldPath);
+                }
             }
             user.avatar = `/uploads/avatars/${req.file.filename}`;
         }
         await user.save();
+        
+        const userResponse = await User.findById(user._id).select('-password');
         res.json({ 
             user: { 
-                id: user._id, 
-                username: user.username,
-                name: user.name, 
-                email: user.email, 
-                avatar: user.avatar, 
-                status: user.status 
+                id: userResponse._id, 
+                username: userResponse.username,
+                name: userResponse.name, 
+                email: userResponse.email, 
+                avatar: userResponse.avatar, 
+                status: userResponse.status 
             } 
         });
     } catch (error) { 
-        console.error(error);
+        console.error('Profile update error:', error);
         res.status(500).json({ error: 'Update failed' }); 
     }
 });
@@ -379,12 +445,56 @@ app.put('/api/profile', authenticate, upload.single('avatar'), async (req, res) 
 // View Other Profile
 app.get('/api/users/:userId', authenticate, async (req, res) => {
     try {
-        const user = await User.findById(req.params.userId).select('username name email avatar status createdAt');
+        const user = await User.findById(req.params.userId)
+            .select('username name email avatar status createdAt')
+            .lean();
+            
         if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        // Check if current user has blocked this user
+        const currentUser = await User.findById(req.user._id);
+        const isBlocked = currentUser.blockedUsers.some(id => 
+            id.toString() === req.params.userId
+        );
+        
+        user.isBlockedByYou = isBlocked;
         res.json(user);
     } catch (error) { 
-        console.error(error);
+        console.error('Fetch profile error:', error);
         res.status(500).json({ error: 'Error fetching profile' }); 
+    }
+});
+
+// Blocked Users List
+app.get('/api/blocked-users', authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+            .populate('blockedUsers', 'username name email avatar status')
+            .select('blockedUsers');
+            
+        res.json(user.blockedUsers || []);
+    } catch (error) { 
+        console.error('Fetch blocked users error:', error);
+        res.status(500).json({ error: 'Error fetching blocked users' }); 
+    }
+});
+
+// Unblock User
+app.delete('/api/users/block/:userId', authenticate, async (req, res) => {
+    try {
+        const userIdToUnblock = req.params.userId;
+        const user = await User.findById(req.user._id);
+        
+        // Remove from blocked list
+        user.blockedUsers = user.blockedUsers.filter(id => 
+            id.toString() !== userIdToUnblock
+        );
+        
+        await user.save();
+        res.json({ message: 'User unblocked successfully' });
+    } catch (error) { 
+        console.error('Unblock error:', error);
+        res.status(500).json({ error: 'Unblock failed' }); 
     }
 });
 
@@ -415,7 +525,7 @@ app.get('/api/friends', authenticate, async (req, res) => {
         }));
         res.json(formattedFriends);
     } catch (error) { 
-        console.error(error);
+        console.error('Fetch friends error:', error);
         res.status(500).json({ error: 'Fetch friends failed' }); 
     }
 });
@@ -423,13 +533,30 @@ app.get('/api/friends', authenticate, async (req, res) => {
 app.post('/api/users/block/:userId', authenticate, async (req, res) => {
     try {
         const userIdToBlock = req.params.userId;
+        
+        // Check if user exists
+        const userToBlock = await User.findById(userIdToBlock);
+        if (!userToBlock) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Check if already blocked
         if (!req.user.blockedUsers.includes(userIdToBlock)) {
             req.user.blockedUsers.push(userIdToBlock);
             await req.user.save();
         }
-        res.json({ message: 'User blocked' });
+        
+        // Remove friend request if exists
+        await FriendRequest.deleteMany({
+            $or: [
+                { sender: req.user._id, receiver: userIdToBlock },
+                { sender: userIdToBlock, receiver: req.user._id }
+            ]
+        });
+        
+        res.json({ message: 'User blocked successfully' });
     } catch (error) { 
-        console.error(error);
+        console.error('Block error:', error);
         res.status(500).json({ error: 'Block failed' }); 
     }
 });
@@ -443,9 +570,9 @@ app.delete('/api/friends/:friendId', authenticate, async (req, res) => {
                 { sender: friendId, receiver: req.user._id }
             ]
         });
-        res.json({ message: 'Friend removed' });
+        res.json({ message: 'Friend removed successfully' });
     } catch (error) { 
-        console.error(error);
+        console.error('Remove friend error:', error);
         res.status(500).json({ error: 'Remove friend failed' }); 
     }
 });
@@ -459,58 +586,77 @@ app.get('/api/friend-requests/received', authenticate, async (req, res) => {
         }).populate('sender', 'username name email avatar');
         res.json(requests);
     } catch (error) { 
-        console.error(error);
+        console.error('Fetch friend requests error:', error);
+        res.status(500).json({ error: 'Fetch failed' }); 
+    }
+});
+
+// Get sent friend requests
+app.get('/api/friend-requests/sent', authenticate, async (req, res) => {
+    try {
+        const requests = await FriendRequest.find({ 
+            sender: req.user._id, 
+            status: 'pending' 
+        }).populate('receiver', 'username name email avatar');
+        res.json(requests);
+    } catch (error) { 
+        console.error('Fetch sent requests error:', error);
         res.status(500).json({ error: 'Fetch failed' }); 
     }
 });
 
 app.post('/api/friend-requests/send', authenticate, async (req, res) => {
     try {
-        const { receiverId } = req.body;
+        const { receiverUsername } = req.body;
         
-        // Check if receiver exists
-        const receiver = await User.findById(receiverId);
+        // Find receiver by username
+        const receiver = await User.findOne({ username: receiverUsername.toLowerCase() });
         if (!receiver) return res.status(404).json({ error: 'User not found' });
+        
+        // Check if trying to add self
+        if (receiver._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ error: 'Cannot send request to yourself' });
+        }
         
         // Check if blocked
         if (receiver.blockedUsers.includes(req.user._id)) {
-            return res.status(403).json({ error: 'Cannot send request' });
+            return res.status(403).json({ error: 'Cannot send request to this user' });
         }
         
         // Check if already friends or request exists
         const existing = await FriendRequest.findOne({
             $or: [
-                { sender: req.user._id, receiver: receiverId },
-                { sender: receiverId, receiver: req.user._id }
+                { sender: req.user._id, receiver: receiver._id },
+                { sender: receiver._id, receiver: req.user._id }
             ]
         });
         
         if (existing) {
             return res.status(400).json({ 
                 error: existing.status === 'accepted' ? 
-                    'Already friends' : 'Request already sent' 
+                    'Already friends' : 'Request already sent or received' 
             });
         }
 
         const request = new FriendRequest({ 
             sender: req.user._id, 
-            receiver: receiverId 
+            receiver: receiver._id 
         });
         await request.save();
-        await request.populate('sender', 'username name email');
+        await request.populate('sender', 'username name email avatar');
 
-        const sock = userSockets.get(receiverId);
-        if (sock) {
-            io.to(sock).emit('friend_request_received', { 
+        // Notify receiver via socket
+        const receiverSocket = userSockets.get(receiver._id.toString());
+        if (receiverSocket) {
+            io.to(receiverSocket).emit('friend_request_received', { 
                 _id: request._id, 
-                senderName: request.sender.name, 
                 sender: request.sender 
             });
         }
         
         res.json(request);
     } catch (error) { 
-        console.error(error);
+        console.error('Send friend request error:', error);
         res.status(500).json({ error: 'Request failed' }); 
     }
 });
@@ -521,74 +667,162 @@ app.post('/api/friend-requests/:requestId/:action', authenticate, async (req, re
         const request = await FriendRequest.findById(req.params.requestId);
         if (!request) return res.status(404).json({ error: 'Request not found' });
         
+        // Check if user is the receiver
+        if (!request.receiver.equals(req.user._id)) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+        
         if (action === 'accept') {
             request.status = 'accepted';
             await request.save();
-            const sock = userSockets.get(request.sender.toString());
-            if (sock) {
-                io.to(sock).emit('friend_request_accepted', { 
+            
+            // Notify sender via socket
+            const senderSocket = userSockets.get(request.sender.toString());
+            if (senderSocket) {
+                io.to(senderSocket).emit('friend_request_accepted', { 
+                    acceptorId: req.user._id,
                     acceptorName: req.user.name 
                 });
             }
-        } else {
+        } else if (action === 'reject') {
             request.status = 'rejected';
             await request.save();
         }
+        
         res.json(request);
     } catch (error) { 
-        console.error(error);
+        console.error('Friend request action error:', error);
         res.status(500).json({ error: 'Action failed' }); 
     }
 });
 
-// Chats
+// Chats - Clean up duplicate chats
+app.get('/api/chats/cleanup', authenticate, async (req, res) => {
+    try {
+        // Find all chats for current user
+        const allChats = await Chat.find({ participants: req.user._id });
+        const chatMap = new Map();
+        const chatsToDelete = [];
+
+        allChats.forEach(chat => {
+            // Sort participant IDs to create unique key
+            const key = chat.participants
+                .map(p => p.toString())
+                .sort()
+                .join('-');
+            
+            if (chatMap.has(key)) {
+                // Keep the newer chat, delete older
+                const existingChat = chatMap.get(key);
+                if (chat.updatedAt > existingChat.updatedAt) {
+                    chatsToDelete.push(existingChat._id);
+                    chatMap.set(key, chat);
+                } else {
+                    chatsToDelete.push(chat._id);
+                }
+            } else {
+                chatMap.set(key, chat);
+            }
+        });
+
+        // Delete duplicate chats
+        if (chatsToDelete.length > 0) {
+            await Chat.deleteMany({ _id: { $in: chatsToDelete } });
+        }
+
+        res.json({ 
+            message: `Cleaned up ${chatsToDelete.length} duplicate chats`,
+            deleted: chatsToDelete.length 
+        });
+    } catch (error) {
+        console.error('Chat cleanup error:', error);
+        res.status(500).json({ error: 'Cleanup failed' });
+    }
+});
+
 app.get('/api/chats', authenticate, async (req, res) => {
     try {
         const chats = await Chat.find({ participants: req.user._id })
             .populate('participants', 'username name email avatar status')
-            .populate('lastMessage')
+            .populate({
+                path: 'lastMessage',
+                populate: {
+                    path: 'sender',
+                    select: 'name'
+                }
+            })
             .sort({ updatedAt: -1 });
 
         const chatsWithData = await Promise.all(chats.map(async (chat) => {
             const unread = await Message.countDocuments({
                 chat: chat._id, 
                 sender: { $ne: req.user._id }, 
-                status: { $in: ['sent', 'delivered'] }
+                status: { $in: ['sent', 'delivered'] },
+                deletedFor: { $ne: req.user._id }
             });
-            return { ...chat.toObject(), unreadCount: unread };
+            
+            // Get other participant
+            const otherParticipant = chat.participants.find(p => 
+                p._id.toString() !== req.user._id.toString()
+            );
+            
+            return { 
+                ...chat.toObject(), 
+                unreadCount: unread,
+                otherParticipant
+            };
         }));
         res.json(chatsWithData);
     } catch (error) { 
-        console.error(error);
+        console.error('Fetch chats error:', error);
         res.status(500).json({ error: 'Fetch chats failed' }); 
     }
 });
 
 app.post('/api/chats', authenticate, async (req, res) => {
     try {
-        const { userId } = req.body;
+        const { username } = req.body;
+        
+        // Find user by username
+        const otherUser = await User.findOne({ username: username.toLowerCase() });
+        if (!otherUser) return res.status(404).json({ error: 'User not found' });
+        
+        // Check if blocked
+        if (otherUser.blockedUsers.includes(req.user._id)) {
+            return res.status(403).json({ error: 'You are blocked by this user' });
+        }
         
         // Check if friend
         const isFriend = await FriendRequest.findOne({
             $or: [ 
-                { sender: req.user._id, receiver: userId, status: 'accepted' }, 
-                { sender: userId, receiver: req.user._id, status: 'accepted' } 
+                { sender: req.user._id, receiver: otherUser._id, status: 'accepted' }, 
+                { sender: otherUser._id, receiver: req.user._id, status: 'accepted' } 
             ]
         });
-        if (!isFriend) return res.status(403).json({ error: 'Friends only' });
+        if (!isFriend) return res.status(403).json({ error: 'You must be friends to chat' });
 
-        let chat = await Chat.findOne({ 
-            participants: { $all: [req.user._id, userId] } 
-        });
+        // Find existing chat (check for duplicates)
+        let chats = await Chat.find({ 
+            participants: { $all: [req.user._id, otherUser._id] } 
+        })
+        .populate('participants', 'username name email avatar status')
+        .sort({ updatedAt: -1 });
         
-        if (!chat) {
-            chat = new Chat({ participants: [req.user._id, userId] });
+        if (chats.length > 0) {
+            // Keep only the most recent chat, delete others
+            for (let i = 1; i < chats.length; i++) {
+                await Chat.findByIdAndDelete(chats[i]._id);
+            }
+            res.json(chats[0]);
+        } else {
+            // Create new chat
+            const chat = new Chat({ participants: [req.user._id, otherUser._id] });
             await chat.save();
+            await chat.populate('participants', 'username name email avatar status');
+            res.json(chat);
         }
-        await chat.populate('participants', 'username name email avatar status');
-        res.json(chat);
     } catch (error) { 
-        console.error(error);
+        console.error('Create chat error:', error);
         res.status(500).json({ error: 'Create chat failed' }); 
     }
 });
@@ -604,7 +838,7 @@ app.get('/api/chats/:chatId/messages', authenticate, authorizeChatAccess, async 
             .sort({ createdAt: 1 });
         res.json(messages);
     } catch (error) { 
-        console.error(error);
+        console.error('Fetch messages error:', error);
         res.status(500).json({ error: 'Fetch messages failed' }); 
     }
 });
@@ -617,8 +851,10 @@ app.post('/api/messages', authenticate, async (req, res) => {
             return res.status(403).json({ error: 'Access denied' });
         }
 
-        // Check if blocked
+        // Get other participant
         const otherId = chat.participants.find(p => !p.equals(req.user._id));
+        
+        // Check if blocked
         const otherUser = await User.findById(otherId);
         if (otherUser && otherUser.blockedUsers.includes(req.user._id)) {
             return res.status(403).json({ error: 'You are blocked by this user' });
@@ -635,17 +871,20 @@ app.post('/api/messages', authenticate, async (req, res) => {
         chat.lastMessage = message._id;
         chat.updatedAt = Date.now();
         await chat.save();
+        
         await message.populate('sender', 'username name email avatar');
+        await message.populate('reactions.userId', 'name');
 
-        // Emit to all except sender
-        socket.to(chatId).emit('new_message', { 
-            ...message.toObject(), 
-            senderName: req.user.name 
+        // Emit to all participants except sender
+        chat.participants.forEach(participantId => {
+            if (participantId.toString() !== req.user._id.toString()) {
+                io.to(participantId.toString()).emit('new_message', message);
+            }
         });
         
         res.json(message);
     } catch (error) { 
-        console.error(error);
+        console.error('Send message error:', error);
         res.status(500).json({ error: 'Send failed' }); 
     }
 });
@@ -662,7 +901,7 @@ app.post('/api/chats/:chatId/read', authenticate, authorizeChatAccess, async (re
         );
         res.json({ success: true });
     } catch (error) { 
-        console.error(error);
+        console.error('Read messages error:', error);
         res.status(500).json({ error: 'Read failed' }); 
     }
 });
@@ -683,15 +922,20 @@ app.put('/api/messages/:messageId', authenticate, async (req, res) => {
         // Update chat timestamp
         await Chat.findByIdAndUpdate(message.chat, { updatedAt: Date.now() });
         
-        io.to(message.chat.toString()).emit('message_updated', { 
-            messageId: message._id, 
-            chatId: message.chat, 
-            text: message.text, 
-            edited: true 
-        });
+        // Emit update to all chat participants
+        const chat = await Chat.findById(message.chat);
+        if (chat) {
+            io.to(chat._id.toString()).emit('message_updated', { 
+                messageId: message._id, 
+                chatId: message.chat, 
+                text: message.text, 
+                edited: true 
+            });
+        }
+        
         res.json(message);
     } catch (error) { 
-        console.error(error);
+        console.error('Update message error:', error);
         res.status(500).json({ error: 'Update failed' }); 
     }
 });
@@ -704,13 +948,18 @@ app.delete('/api/messages/:messageId', authenticate, async (req, res) => {
         message.deletedFor.push(req.user._id);
         await message.save();
         
-        io.to(message.chat.toString()).emit('message_deleted', { 
-            messageId: message._id, 
-            chatId: message.chat 
-        });
+        // Emit to all chat participants
+        const chat = await Chat.findById(message.chat);
+        if (chat) {
+            io.to(chat._id.toString()).emit('message_deleted', { 
+                messageId: message._id, 
+                chatId: message.chat 
+            });
+        }
+        
         res.json({ success: true });
     } catch (error) { 
-        console.error(error);
+        console.error('Delete message error:', error);
         res.status(500).json({ error: 'Delete failed' }); 
     }
 });
@@ -723,18 +972,23 @@ app.post('/api/messages/:messageId/reactions', authenticate, async (req, res) =>
         if (!message) return res.status(404).json({ error: 'Message not found' });
         
         // Remove existing reaction from same user
-        message.reactions = message.reactions.filter(r => r.userId.toString() !== req.user._id.toString());
+        message.reactions = message.reactions.filter(r => 
+            r.userId.toString() !== req.user._id.toString()
+        );
         
         // Add new reaction
         message.reactions.push({ userId: req.user._id, emoji });
         await message.save();
+        
+        // Populate userId
+        await message.populate('reactions.userId', 'name');
         
         // Update chat timestamp
         await Chat.findByIdAndUpdate(message.chat, { updatedAt: Date.now() });
         
         res.json(message.reactions);
     } catch (error) { 
-        console.error(error);
+        console.error('Add reaction error:', error);
         res.status(500).json({ error: 'Add reaction failed' }); 
     }
 });
@@ -744,7 +998,9 @@ app.delete('/api/messages/:messageId/reactions', authenticate, async (req, res) 
         const message = await Message.findById(req.params.messageId);
         if (!message) return res.status(404).json({ error: 'Message not found' });
         
-        message.reactions = message.reactions.filter(r => r.userId.toString() !== req.user._id.toString());
+        message.reactions = message.reactions.filter(r => 
+            r.userId.toString() !== req.user._id.toString()
+        );
         await message.save();
         
         // Update chat timestamp
@@ -752,7 +1008,7 @@ app.delete('/api/messages/:messageId/reactions', authenticate, async (req, res) 
         
         res.json(message.reactions);
     } catch (error) { 
-        console.error(error);
+        console.error('Remove reaction error:', error);
         res.status(500).json({ error: 'Remove reaction failed' }); 
     }
 });
@@ -770,7 +1026,7 @@ app.get('/api/users/search', authenticate, async (req, res) => {
         }).select('username name email avatar status');
         res.json(users);
     } catch (error) { 
-        console.error(error);
+        console.error('Search users error:', error);
         res.status(500).json({ error: 'Search failed' }); 
     }
 });
@@ -779,13 +1035,26 @@ app.get('/api/users/search', authenticate, async (req, res) => {
 app.get('/api/users/username/:username', authenticate, async (req, res) => {
     try {
         const user = await User.findOne({ 
-            username: req.params.username 
+            username: req.params.username.toLowerCase()
         }).select('username name email avatar status');
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);
     } catch (error) { 
-        console.error(error);
+        console.error('Get user by username error:', error);
         res.status(500).json({ error: 'Error fetching user' }); 
+    }
+});
+
+// Check username availability
+app.get('/api/check-username/:username', async (req, res) => {
+    try {
+        const user = await User.findOne({ 
+            username: req.params.username.toLowerCase() 
+        });
+        res.json({ available: !user });
+    } catch (error) {
+        console.error('Check username error:', error);
+        res.status(500).json({ error: 'Check failed' });
     }
 });
 
