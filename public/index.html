@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learnox - Secure Chat</title>
+    <title>Learnox - Purple Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        /* --- ORIGINAL DESIGN & COLORS --- */
+        /* --- PURPLE LIGHT THEME (Aapka Diya Hua Design) --- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         
         body { 
@@ -20,141 +20,176 @@
             color: #333;
         }
 
-        /* Auth Container (Original White Box) */
+        /* --- AUTH SCREEN --- */
         .auth-container { 
             background: white; 
             width: 400px; 
             padding: 2.5rem; 
             border-radius: 20px; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            text-align: center;
+            /* Animation added */
+            animation: fadeIn 0.5s ease;
         }
-        .logo { font-size: 3rem; color: #667eea; text-align: center; margin-bottom: 1rem; }
-        .auth-header { text-align: center; margin-bottom: 2rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .logo { 
+            font-size: 3rem; margin-bottom: 1rem; 
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
         .form-control { 
-            width: 100%; padding: 14px; margin-bottom: 15px; 
-            border: 2px solid #e1e5e9; border-radius: 10px; outline: none; background: #f8f9fa;
+            width: 100%; padding: 14px 16px; margin-bottom: 15px; 
+            border: 2px solid #e1e5e9; border-radius: 10px; 
+            font-size: 15px; outline: none; background: #f8f9fa; transition: 0.3s;
         }
-        .form-control:focus { border-color: #667eea; background: white; }
+        .form-control:focus { border-color: #667eea; background: white; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        
         .btn { 
-            width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; 
+            width: 100%; padding: 14px; margin-top: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; border: none; border-radius: 10px; 
+            cursor: pointer; font-weight: 600; font-size: 16px; transition: 0.3s;
         }
-        .switch-text { text-align: center; margin-top: 20px; font-size: 14px; color: #6c757d; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3); }
+        
+        .switch-text { margin-top: 20px; font-size: 14px; color: #6c757d; }
         .switch-link { color: #667eea; cursor: pointer; font-weight: 600; margin-left: 5px; }
 
-        /* App Container */
+        /* --- MAIN APP INTERFACE --- */
         .app-container { 
-            display: none; width: 95vw; height: 95vh; background: white; 
-            border-radius: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
-            overflow: hidden; display: flex; 
+            display: none; /* Pehle Hide rahega */
+            width: 95vw; height: 92vh; background: white; 
+            border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+            overflow: hidden; 
+            /* Layout */
+            display: flex; 
         }
 
         /* Sidebar */
-        .sidebar { width: 350px; background: #f8f9fa; border-right: 1px solid #e9ecef; display: flex; flex-direction: column; }
+        .sidebar { width: 340px; background: #f8f9fa; border-right: 1px solid #e9ecef; display: flex; flex-direction: column; }
         
-        .user-profile { 
-            padding: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; 
+        .user-profile-header { 
+            padding: 20px; background: white; border-bottom: 1px solid #e9ecef;
             display: flex; align-items: center; justify-content: space-between;
         }
-        .profile-info { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .profile-avatar { 
-            width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.2); 
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
-        }
-        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .my-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #667eea; padding: 2px; cursor: pointer; }
         
-        /* Navigation Tabs */
+        /* Tabs */
         .nav-tabs { display: flex; background: white; border-bottom: 1px solid #e9ecef; }
         .nav-tab { 
-            flex: 1; text-align: center; padding: 15px 0; cursor: pointer; color: #6c757d; font-weight: 600; font-size: 14px;
+            flex: 1; text-align: center; padding: 15px 0; cursor: pointer; 
+            color: #6c757d; font-weight: 600; font-size: 14px; transition: 0.2s;
         }
-        .nav-tab.active { color: #667eea; border-bottom: 3px solid #667eea; }
+        .nav-tab.active { color: #667eea; border-bottom: 3px solid #667eea; background: #f8f9fa; }
 
         /* Lists */
         .list-container { flex: 1; overflow-y: auto; }
         .list-item { 
             padding: 15px 20px; border-bottom: 1px solid #f1f3f5; cursor: pointer; 
-            display: flex; align-items: center; gap: 15px; transition: 0.2s; 
+            display: flex; align-items: center; gap: 15px; transition: 0.2s; background: white;
         }
-        .list-item:hover { background: #f8f9fa; }
-        .avatar { 
-            width: 45px; height: 45px; background: #e9ecef; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
-        }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .list-content h4 { font-size: 15px; margin-bottom: 3px; }
-        .list-content p { font-size: 13px; color: #6c757d; }
-        
-        .request-actions button {
-            padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; margin-right: 5px; font-size: 12px;
-        }
-        .btn-accept { background: #40c057; color: white; }
-        .btn-reject { background: #fa5252; color: white; }
+        .list-item:hover { background: #f1f3f5; }
+        .item-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ddd; object-fit: cover; }
+        .item-info h4 { font-size: 15px; margin-bottom: 3px; color: #333; }
+        .item-info p { font-size: 13px; color: #6c757d; }
+
+        /* Buttons for Requests */
+        .req-btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; margin-left: 5px; color: white; }
+        .btn-accept { background: #00b894; }
+        .btn-reject { background: #ff4b4b; }
 
         /* Chat Area */
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: #fff; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: white; position: relative; }
         .chat-header { 
-            padding: 15px 25px; border-bottom: 1px solid #e9ecef; display: flex; align-items: center; gap: 15px; 
+            padding: 15px 25px; border-bottom: 1px solid #e9ecef; 
+            display: flex; align-items: center; gap: 15px; background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02); z-index: 10;
         }
-        .typing-indicator { font-size: 12px; color: #667eea; margin-left: 10px; font-style: italic; display: none; }
-
-        .messages { flex: 1; padding: 25px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; gap: 10px; }
         
-        .msg { max-width: 70%; padding: 12px 16px; border-radius: 18px; font-size: 14px; position: relative; }
-        .msg.sent { align-self: flex-end; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-bottom-right-radius: 4px; }
-        .msg.received { align-self: flex-start; background: white; border: 1px solid #e9ecef; border-bottom-left-radius: 4px; }
-        
-        .msg-actions { 
-            display: none; position: absolute; top: -25px; right: 0; background: white; 
-            padding: 5px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        .messages-box { 
+            flex: 1; padding: 25px; overflow-y: auto; background: #fdfdfd; 
+            display: flex; flex-direction: column; gap: 10px; 
+            background-image: radial-gradient(#667eea 0.5px, transparent 0.5px);
+            background-size: 20px 20px; opacity: 1;
         }
-        .msg:hover .msg-actions { display: flex; gap: 5px; }
-        .action-icon { cursor: pointer; padding: 3px; color: #667eea; }
-        .action-icon.delete { color: #fa5252; }
+        
+        .msg { max-width: 70%; padding: 12px 16px; border-radius: 15px; font-size: 14px; position: relative; word-wrap: break-word; }
+        .msg.sent { 
+            align-self: flex-end; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; 
+            border-bottom-right-radius: 2px; 
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+        }
+        .msg.received { 
+            align-self: flex-start; 
+            background: white; 
+            border: 1px solid #e9ecef; 
+            color: #333;
+            border-bottom-left-radius: 2px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
 
-        .input-area { padding: 20px; border-top: 1px solid #e9ecef; display: flex; gap: 10px; }
-        .input-area input { flex: 1; padding: 12px 20px; border: 2px solid #e9ecef; border-radius: 25px; outline: none; }
-        .send-btn { width: 45px; height: 45px; border-radius: 50%; background: #667eea; color: white; border: none; cursor: pointer; }
+        .input-area { 
+            padding: 20px; border-top: 1px solid #e9ecef; display: flex; gap: 10px; background: white; 
+        }
+        .input-field { 
+            flex: 1; padding: 12px 20px; border: 2px solid #e9ecef; 
+            border-radius: 25px; outline: none; transition: 0.3s;
+        }
+        .input-field:focus { border-color: #667eea; }
+        .send-btn-circle { 
+            width: 45px; height: 45px; border-radius: 50%; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; border: none; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+        }
 
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 400px; }
-        .hidden { display: none; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="auth-container" id="auth-box">
         <div class="logo"><i class="fas fa-comments"></i></div>
-        <div class="auth-header"><h2 id="auth-title">Welcome Back</h2></div>
-        
+        <h2 id="auth-title" style="margin-bottom: 10px; color:#333;">Login</h2>
+        <p style="margin-bottom: 20px; color:#777;">Welcome to Learnox</p>
+
         <form id="auth-form">
-            <input type="text" id="name" class="form-control hidden" placeholder="Full Name">
-            <input type="text" id="username-reg" class="form-control hidden" placeholder="Username (starts with @)">
-            <input type="email" id="email" class="form-control" placeholder="Email Address">
-            <input type="password" id="password" class="form-control" placeholder="Password">
+            <input type="text" id="reg-name" class="form-control hidden" placeholder="Full Name">
+            <input type="text" id="reg-username" class="form-control hidden" placeholder="Username (starts with @)">
+            
+            <input type="email" id="email" class="form-control" placeholder="Email Address" required>
+            <input type="password" id="password" class="form-control" placeholder="Password" required>
+            
             <button type="submit" class="btn" id="submit-btn">Login</button>
         </form>
-        
+
         <div class="switch-text">
             <span id="switch-text">Don't have an account?</span>
-            <span class="switch-link" id="switch-auth">Register</span>
+            <span class="switch-link" onclick="toggleAuth()">Register</span>
         </div>
     </div>
 
-    <div class="app-container" id="app-box">
+    <div class="app-container" id="app-box" style="display: none;">
         <div class="sidebar">
-            <div class="user-profile" onclick="openProfileModal()">
-                <div class="profile-info">
-                    <div class="profile-avatar" id="my-avatar"><i class="fas fa-user"></i></div>
+            <div class="user-profile-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img id="my-avatar-img" src="" class="my-avatar" onclick="openProfile()">
                     <div>
-                        <h3 id="my-name" style="font-size: 16px;">User</h3>
-                        <small id="my-username" style="opacity: 0.8;">@user</small>
+                        <h4 id="my-name-display">User</h4>
+                        <small id="my-username-display" style="color:#667eea; font-weight:bold;">@user</small>
                     </div>
                 </div>
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-cog" style="cursor:pointer; color:#777;" onclick="openProfile()"></i>
             </div>
-            
+
             <div class="nav-tabs">
                 <div class="nav-tab active" onclick="switchTab('friends')">Friends</div>
                 <div class="nav-tab" onclick="switchTab('chats')">Chats</div>
@@ -162,340 +197,391 @@
                 <div class="nav-tab" onclick="switchTab('find')">Find</div>
             </div>
 
-            <div class="list-container" id="list-container">
+            <div class="list-container" id="list-content">
                 </div>
         </div>
 
         <div class="chat-area">
-            <div class="chat-header" id="chat-header" style="display:none;">
-                <div class="avatar" id="chat-avatar-header"><i class="fas fa-user"></i></div>
-                <div>
-                    <h3 id="chat-name-header">Select a user</h3>
-                    <small id="chat-bio-header" style="color:#888;">...</small>
-                    <span class="typing-indicator" id="typing-indicator">typing...</span>
-                </div>
+            <div id="no-chat" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#ccc;">
+                <i class="fas fa-paper-plane" style="font-size: 50px; margin-bottom:20px; color:#e1e5e9;"></i>
+                <h3>Select a conversation</h3>
             </div>
-            
-            <div class="messages" id="messages">
-                <div style="text-align:center; margin-top:50px; color:#ccc;">
-                    <i class="fas fa-paper-plane" style="font-size:50px; margin-bottom:20px;"></i>
-                    <h3>Select a friend to start chatting</h3>
+
+            <div id="active-chat" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+                <div class="chat-header">
+                    <img id="chat-header-img" src="" style="width:40px; height:40px; border-radius:50%;">
+                    <div>
+                        <h4 id="chat-header-name">User</h4>
+                        <small id="typing-indicator" style="color:#667eea; display:none;">typing...</small>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="input-area" id="input-area" style="display:none;">
-                <input type="text" id="msg-input" placeholder="Type a message...">
-                <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+
+                <div id="messages-box" class="messages-box"></div>
+
+                <form class="input-area" onsubmit="sendMessage(event)">
+                    <input type="text" id="msg-input" class="input-field" placeholder="Type a message..." autocomplete="off">
+                    <button type="submit" class="send-btn-circle"><i class="fas fa-paper-plane"></i></button>
+                </form>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="profile-modal">
+    <div id="profile-modal" class="modal">
         <div class="modal-content">
             <h3 style="margin-bottom:20px;">Edit Profile</h3>
-            <input type="file" id="avatar-upload" style="margin-bottom:15px;">
+            <span style="position:absolute; top:15px; right:20px; cursor:pointer;" onclick="closeModal()">?</span>
+            
             <input type="text" id="edit-name" class="form-control" placeholder="Name">
-            <input type="text" id="edit-bio" class="form-control" placeholder="Bio (visible to others)">
-            <input type="password" id="edit-password" class="form-control" placeholder="New Password (optional)">
-            <div style="display:flex; gap:10px;">
-                <button class="btn" onclick="saveProfile()">Save</button>
-                <button class="btn" style="background:#6c757d;" onclick="closeProfileModal()">Close</button>
-            </div>
-            <button class="btn" style="background:#fa5252; margin-top:10px;" onclick="logout()">Logout</button>
+            <input type="text" id="edit-bio" class="form-control" placeholder="Bio">
+            <input type="password" id="edit-pass" class="form-control" placeholder="New Password (Optional)">
+            
+            <button class="btn" onclick="saveProfile()">Save Changes</button>
+            <button class="btn" style="background:#ff4b4b; margin-top:10px;" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <script>
         const API_URL = '/api';
-        let socket, token = localStorage.getItem('token'), user, currentChatId;
+        const socket = io();
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+        let currentChatId = null;
         let typingTimeout;
 
-        // AUTH LOGIC
-        if(token) initApp();
+        // --- AUTH LOGIC ---
+        
+        // Check if already logged in
+        if(token) {
+            initApp();
+        }
 
-        document.getElementById('switch-auth').onclick = () => {
-            const isLogin = document.getElementById('name').classList.contains('hidden');
-            document.getElementById('name').classList.toggle('hidden');
-            document.getElementById('username-reg').classList.toggle('hidden');
-            document.getElementById('auth-title').innerText = isLogin ? 'Create Account' : 'Welcome Back';
-            document.getElementById('submit-btn').innerText = isLogin ? 'Register' : 'Login';
-            document.getElementById('switch-text').innerText = isLogin ? 'Already have an account?' : "Don't have an account?";
-            document.getElementById('switch-auth').innerText = isLogin ? 'Login' : 'Register';
-        };
+        function toggleAuth() {
+            const isLogin = document.getElementById('reg-name').classList.contains('hidden');
+            const title = document.getElementById('auth-title');
+            const submitBtn = document.getElementById('submit-btn');
+            const switchText = document.getElementById('switch-text');
+            const switchLink = document.querySelector('.switch-link');
 
-        document.getElementById('auth-form').onsubmit = async (e) => {
+            if (isLogin) {
+                // Switch to Register
+                document.getElementById('reg-name').classList.remove('hidden');
+                document.getElementById('reg-username').classList.remove('hidden');
+                title.innerText = 'Create Account';
+                submitBtn.innerText = 'Register';
+                switchText.innerText = 'Already have an account?';
+                switchLink.innerText = 'Login';
+            } else {
+                // Switch to Login
+                document.getElementById('reg-name').classList.add('hidden');
+                document.getElementById('reg-username').classList.add('hidden');
+                title.innerText = 'Login';
+                submitBtn.innerText = 'Login';
+                switchText.innerText = "Don't have an account?";
+                switchLink.innerText = 'Register';
+            }
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const isRegister = !document.getElementById('name').classList.contains('hidden');
+            const isRegister = !document.getElementById('reg-name').classList.contains('hidden');
             const endpoint = isRegister ? '/register' : '/login';
-            const body = {
+            
+            const payload = {
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value
             };
-            if(isRegister) {
-                body.name = document.getElementById('name').value;
-                body.username = document.getElementById('username-reg').value;
+
+            if (isRegister) {
+                payload.name = document.getElementById('reg-name').value;
+                payload.username = document.getElementById('reg-username').value;
             }
 
-            const res = await fetch(API_URL + endpoint, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
-            });
-            const data = await res.json();
-            if(data.token) {
-                localStorage.setItem('token', data.token);
-                token = data.token;
-                initApp();
-            } else {
-                alert(data.error);
+            try {
+                const res = await fetch(API_URL + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    token = data.token;
+                    initApp();
+                } else {
+                    alert(data.error || 'Authentication failed');
+                }
+            } catch (err) {
+                alert('Server Error');
             }
-        };
+        });
+
+        // --- APP INITIALIZATION ---
 
         async function initApp() {
+            // UI Switch
             document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('app-box').style.display = 'flex';
-            
-            // Get latest profile
-            const res = await fetch(`${API_URL}/profile`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            user = data.user;
-            
-            document.getElementById('my-name').innerText = user.name;
-            document.getElementById('my-username').innerText = user.username;
-            if(user.avatar) document.getElementById('my-avatar').innerHTML = `<img src="${user.avatar}">`;
+            document.getElementById('app-box').style.display = 'flex'; // Use Flex for layout
 
-            socket = io({ auth: { token } });
-            setupSocket();
+            // Fetch User Profile
+            const res = await fetch(API_URL + '/profile', { 
+                method: 'PUT', // Using PUT just to get data as per your server structure
+                headers: { 'Authorization': `Bearer ${token}` } 
+            });
+            const data = await res.json();
+            currentUser = data.user;
+
+            // Set Sidebar Data
+            document.getElementById('my-name-display').innerText = currentUser.name;
+            document.getElementById('my-username-display').innerText = currentUser.username;
+            document.getElementById('my-avatar-img').src = currentUser.avatar || 'https://via.placeholder.com/50';
+
+            // Connect Socket
+            socket.emit('join_user', currentUser._id);
+            setupSocketListeners();
+
+            // Load Friends by default
             switchTab('friends');
         }
 
-        // TABS & LISTS
-        async function switchTab(tab) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            const container = document.getElementById('list-container');
-            container.innerHTML = '<div style="padding:20px; text-align:center;">Loading...</div>';
-
-            if(tab === 'find') {
-                container.innerHTML = `
-                    <div style="padding:20px;">
-                        <input type="text" class="form-control" placeholder="Search exactly by @username" onkeyup="if(event.key==='Enter') searchUser(this.value)">
-                        <small>Press Enter to search. Must match exact username.</small>
-                    </div>
-                    <div id="search-results"></div>
-                `;
-                return;
-            }
-
-            let url = tab === 'friends' ? '/friends' : tab === 'chats' ? '/chats' : '/friend-requests/received';
-            const res = await fetch(API_URL + url, { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            renderList(tab, data);
-        }
-
-        function renderList(type, data) {
-            const container = document.getElementById('list-container');
-            container.innerHTML = '';
-            if(data.length === 0) container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Nothing here yet.</div>';
-
-            data.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                
-                if(type === 'requests') {
-                    div.innerHTML = `
-                        <div class="avatar">${item.sender.avatar ? `<img src="${item.sender.avatar}">` : '<i class="fas fa-user"></i>'}</div>
-                        <div class="list-content" style="flex:1;">
-                            <h4>${item.sender.name}</h4>
-                            <p>${item.sender.username}</p>
-                        </div>
-                        <div class="request-actions">
-                            <button class="btn-accept" onclick="handleReq('${item._id}', 'accept')">Accept</button>
-                            <button class="btn-reject" onclick="handleReq('${item._id}', 'reject')">Reject</button>
-                        </div>
-                    `;
-                } else {
-                    // Friends or Chats
-                    let u = type === 'chats' ? item.participants.find(p => p._id !== user._id) : item;
-                    div.onclick = () => openChat(item._id || null, u); // Pass chat ID if exists
-                    div.innerHTML = `
-                        <div class="avatar">${u.avatar ? `<img src="${u.avatar}">` : '<i class="fas fa-user"></i>'}</div>
-                        <div class="list-content">
-                            <h4>${u.name}</h4>
-                            <p>${type === 'chats' && item.lastMessage ? item.lastMessage.text : u.bio || '@'+u.username}</p>
-                        </div>
-                    `;
-                }
-                container.appendChild(div);
-            });
-        }
-
-        async function searchUser(query) {
-            const res = await fetch(`${API_URL}/users/search?q=${query}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const users = await res.json();
-            const div = document.getElementById('search-results');
-            div.innerHTML = '';
-            users.forEach(u => {
-                div.innerHTML += `
-                    <div class="list-item">
-                        <div class="avatar">${u.avatar ? `<img src="${u.avatar}">` : '<i class="fas fa-user"></i>'}</div>
-                        <div class="list-content" style="flex:1;">
-                            <h4>${u.name}</h4>
-                            <p>${u.bio || u.username}</p>
-                        </div>
-                        <button class="btn" style="width:auto; padding:5px 15px;" onclick="sendReq('${u._id}')">Add</button>
-                    </div>
-                `;
-            });
-            if(users.length === 0) div.innerHTML = '<div style="padding:20px; text-align:center;">No exact match found.</div>';
-        }
-
-        // CHAT LOGIC
-        async function openChat(chatId, friend) {
-            if(!chatId) {
-                // Create chat first
-                const res = await fetch(`${API_URL}/chats`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ userId: friend._id })
-                });
-                const chat = await res.json();
-                chatId = chat._id;
-            }
-            
-            currentChatId = chatId;
-            document.getElementById('chat-header').style.display = 'flex';
-            document.getElementById('input-area').style.display = 'flex';
-            document.getElementById('chat-name-header').innerText = friend.name;
-            document.getElementById('chat-bio-header').innerText = friend.bio || friend.username;
-            if(friend.avatar) document.getElementById('chat-avatar-header').innerHTML = `<img src="${friend.avatar}">`;
-
-            socket.emit('join_chat', chatId);
-            loadMessages();
-        }
-
-        async function loadMessages() {
-            const res = await fetch(`${API_URL}/chats/${currentChatId}/messages`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const msgs = await res.json();
-            const container = document.getElementById('messages');
-            container.innerHTML = '';
-            msgs.forEach(addMessage);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function addMessage(msg) {
-            const div = document.createElement('div');
-            div.className = `msg ${msg.sender._id === user._id ? 'sent' : 'received'}`;
-            div.id = `msg-${msg._id}`;
-            div.innerHTML = `
-                <span class="msg-text">${msg.text}</span>
-                ${msg.edited ? '<small style="opacity:0.6; font-size:10px;">(edited)</small>' : ''}
-                ${msg.sender._id === user._id ? `
-                <div class="msg-actions">
-                    <i class="fas fa-edit action-icon" onclick="editMsg('${msg._id}', '${msg.text}')"></i>
-                    <i class="fas fa-trash action-icon delete" onclick="deleteMsg('${msg._id}')"></i>
-                </div>` : ''}
-            `;
-            document.getElementById('messages').appendChild(div);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if(!text) return;
-            input.value = '';
-            
-            await fetch(`${API_URL}/messages`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ chatId: currentChatId, text })
-            });
-            socket.emit('stop_typing', { chatId: currentChatId });
-        }
-
-        // Typing
-        document.getElementById('msg-input').addEventListener('input', () => {
-            socket.emit('typing', { chatId: currentChatId });
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => socket.emit('stop_typing', { chatId: currentChatId }), 1000);
-        });
-
-        // ACTIONS
-        async function sendReq(id) {
-            await fetch(`${API_URL}/friend-requests/send`, {
-                method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-                body: JSON.stringify({ receiverId: id })
-            });
-            alert('Request Sent');
-        }
-
-        async function handleReq(id, action) {
-            await fetch(`${API_URL}/friend-requests/${id}/${action}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
-            switchTab('requests');
-        }
-
-        async function deleteMsg(id) {
-            if(confirm('Delete message?')) {
-                await fetch(`${API_URL}/messages/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-            }
-        }
-
-        async function editMsg(id, oldText) {
-            const newText = prompt('Edit message:', oldText);
-            if(newText && newText !== oldText) {
-                await fetch(`${API_URL}/messages/${id}`, {
-                    method: 'PUT', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-                    body: JSON.stringify({ text: newText })
-                });
-            }
-        }
-
-        // SOCKET LISTENERS
-        function setupSocket() {
-            socket.emit('join_user', user._id);
-            socket.on('new_message', (msg) => {
-                if(currentChatId === msg.chat) addMessage(msg);
-            });
-            socket.on('message_deleted', (data) => {
-                if(currentChatId === data.chatId) document.getElementById(`msg-${data.id}`)?.remove();
-            });
-            socket.on('message_updated', (data) => {
-                if(currentChatId === data.chat) {
-                    const el = document.getElementById(`msg-${data._id}`);
-                    if(el) {
-                        el.querySelector('.msg-text').innerText = data.text;
-                        if(!el.innerHTML.includes('(edited)')) el.innerHTML += '<small style="opacity:0.6; font-size:10px;">(edited)</small>';
-                    }
-                }
-            });
-            socket.on('typing', () => document.getElementById('typing-indicator').style.display = 'block');
-            socket.on('stop_typing', () => document.getElementById('typing-indicator').style.display = 'none');
-        }
-
-        // PROFILE MODAL
-        function openProfileModal() {
-            document.getElementById('profile-modal').style.display = 'flex';
-            document.getElementById('edit-name').value = user.name;
-            document.getElementById('edit-bio').value = user.bio;
-        }
-        function closeProfileModal() { document.getElementById('profile-modal').style.display = 'none'; }
-        
-        async function saveProfile() {
-            const formData = new FormData();
-            formData.append('name', document.getElementById('edit-name').value);
-            formData.append('bio', document.getElementById('edit-bio').value);
-            const pass = document.getElementById('edit-password').value;
-            if(pass) formData.append('newPassword', pass);
-            const file = document.getElementById('avatar-upload').files[0];
-            if(file) formData.append('avatar', file);
-
-            const res = await fetch(`${API_URL}/profile`, {
-                method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }, body: formData
-            });
-            const data = await res.json();
-            user = data.user;
-            closeProfileModal();
+        function logout() {
+            localStorage.clear();
             location.reload();
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
+        // --- SIDEBAR TABS & LISTS ---
+
+        async function switchTab(tabName) {
+            // Update Tab UI
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active'); // "event" is implicit in onclick
+            
+            const listDiv = document.getElementById('list-content');
+            listDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#999;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            if (tabName === 'find') {
+                renderFindTab();
+                return;
+            }
+
+            // Fetch Data based on tab
+            let endpoint = '';
+            if (tabName === 'friends') endpoint = '/friends';
+            if (tabName === 'chats') endpoint = '/chats';
+            if (tabName === 'requests') endpoint = '/friend-requests/received';
+
+            const res = await fetch(API_URL + endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            
+            listDiv.innerHTML = '';
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Nothing found here.</div>';
+                return;
+            }
+
+            data.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'list-item';
+                
+                if (tabName === 'requests') {
+                    // Render Request Item
+                    el.innerHTML = `
+                        <img src="${item.sender.avatar || 'https://via.placeholder.com/40'}" class="item-avatar">
+                        <div class="item-info" style="flex:1;">
+                            <h4>${item.sender.name}</h4>
+                            <p>${item.sender.username}</p>
+                        </div>
+                        <button class="req-btn btn-accept" onclick="handleReq('${item._id}', 'accept')">Accept</button>
+                        <button class="req-btn btn-reject" onclick="handleReq('${item._id}', 'reject')">Reject</button>
+                    `;
+                } else {
+                    // Render Friend/Chat Item
+                    const u = (tabName === 'chats') ? item.participants.find(p => p._id !== currentUser._id) : item;
+                    const subtext = (tabName === 'chats' && item.lastMessage) ? item.lastMessage.text : (u.bio || u.username);
+                    
+                    el.onclick = () => openChat(item._id, u); // Pass chat ID if exists
+                    el.innerHTML = `
+                        <img src="${u.avatar || 'https://via.placeholder.com/40'}" class="item-avatar">
+                        <div class="item-info">
+                            <h4>${u.name}</h4>
+                            <p>${subtext}</p>
+                        </div>
+                    `;
+                }
+                listDiv.appendChild(el);
+            });
+        }
+
+        // --- FIND / SEARCH TAB ---
+        function renderFindTab() {
+            const container = document.getElementById('list-content');
+            container.innerHTML = `
+                <div style="padding:15px;">
+                    <input type="text" class="form-control" placeholder="Search by @username..." onkeyup="if(event.key==='Enter') searchUsers(this.value)">
+                    <small style="color:#777;">Press Enter to search exact username.</small>
+                </div>
+                <div id="search-results"></div>
+            `;
+        }
+
+        async function searchUsers(query) {
+            const res = await fetch(`${API_URL}/users/search?q=${query}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const users = await res.json();
+            const resDiv = document.getElementById('search-results');
+            resDiv.innerHTML = '';
+            
+            if (users.length === 0) {
+                resDiv.innerHTML = '<p style="text-align:center; color:#999; margin-top:10px;">User not found</p>';
+                return;
+            }
+
+            users.forEach(u => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <img src="${u.avatar || 'https://via.placeholder.com/40'}" class="item-avatar">
+                    <div class="item-info" style="flex:1;">
+                        <h4>${u.name}</h4>
+                        <p>${u.username}</p>
+                    </div>
+                    <button class="req-btn" style="background:#667eea;" onclick="sendReq('${u._id}')">Add</button>
+                `;
+                resDiv.appendChild(div);
+            });
+        }
+
+        async function sendReq(userId) {
+            await fetch(API_URL + '/friend-requests/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ receiverId: userId })
+            });
+            alert('Request Sent!');
+        }
+
+        async function handleReq(reqId, action) {
+            await fetch(`${API_URL}/friend-requests/${reqId}/${action}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            switchTab('requests'); // Refresh list
+        }
+
+        // --- CHAT LOGIC ---
+
+        async function openChat(chatId, user) {
+            // Prepare UI
+            document.getElementById('no-chat').classList.add('hidden');
+            const activeDiv = document.getElementById('active-chat');
+            activeDiv.classList.remove('hidden');
+            
+            document.getElementById('chat-header-name').innerText = user.name;
+            document.getElementById('chat-header-img').src = user.avatar || 'https://via.placeholder.com/40';
+
+            // Create Chat ID if friend click (not existing chat)
+            if (!chatId) {
+                const res = await fetch(API_URL + '/chats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ userId: user._id })
+                });
+                const chatData = await res.json();
+                chatId = chatData._id;
+            }
+
+            currentChatId = chatId;
+            socket.emit('join_chat', chatId);
+            loadMessages(chatId);
+        }
+
+        async function loadMessages(chatId) {
+            const box = document.getElementById('messages-box');
+            box.innerHTML = ''; // Clear previous
+            const res = await fetch(`${API_URL}/chats/${chatId}/messages`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const messages = await res.json();
+            messages.forEach(addMessageToUI);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function addMessageToUI(msg) {
+            const box = document.getElementById('messages-box');
+            const isMe = msg.sender._id === currentUser._id || msg.sender === currentUser._id; // Handle populated vs unpopulated
+            
+            const div = document.createElement('div');
+            div.className = `msg ${isMe ? 'sent' : 'received'}`;
+            div.innerText = msg.text;
+            
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+
+            input.value = '';
+            
+            // Optimistic UI update (optional, but good for speed)
+            // addMessageToUI({ text: text, sender: { _id: currentUser._id } }); 
+
+            await fetch(API_URL + '/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ chatId: currentChatId, text })
+            });
+
+            socket.emit('stop_typing', { chatId: currentChatId });
+        }
+
+        // --- SOCKET LISTENING ---
+        function setupSocketListeners() {
+            socket.on('new_message', (msg) => {
+                if (currentChatId === msg.chat) {
+                    addMessageToUI(msg);
+                }
+            });
+
+            // Typing Indicators
+            const input = document.getElementById('msg-input');
+            input.addEventListener('input', () => {
+                socket.emit('typing', { chatId: currentChatId });
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => socket.emit('stop_typing', { chatId: currentChatId }), 1000);
+            });
+
+            socket.on('typing', () => {
+                document.getElementById('typing-indicator').style.display = 'block';
+            });
+            socket.on('stop_typing', () => {
+                document.getElementById('typing-indicator').style.display = 'none';
+            });
+        }
+
+        // --- PROFILE MODAL ---
+        function openProfile() {
+            document.getElementById('profile-modal').style.display = 'flex';
+            document.getElementById('edit-name').value = currentUser.name;
+            document.getElementById('edit-bio').value = currentUser.bio || '';
+        }
+        function closeModal() { document.getElementById('profile-modal').style.display = 'none'; }
+        
+        async function saveProfile() {
+            const name = document.getElementById('edit-name').value;
+            const bio = document.getElementById('edit-bio').value;
+            const pass = document.getElementById('edit-pass').value;
+
+            const body = { name, bio };
+            if(pass) body.newPassword = pass;
+
+            await fetch(API_URL + '/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            location.reload();
+        }
     </script>
 </body>
 </html>
