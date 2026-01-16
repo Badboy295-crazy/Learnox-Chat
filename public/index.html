@@ -3,52 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learnox Pro - World's Most Secure Chat</title>
+    <title>Learnox Pro - Secure Real-time Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/emoji-picker.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/emoji-picker.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        /* ===== GLOBAL RESET & VARIABLES ===== */
+        /* ===== GLOBAL RESET ===== */
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --primary-light: #6366f1;
             --secondary: #ec4899;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
             --info: #3b82f6;
             
-            --bg-dark: #0f172a;
-            --bg-sidebar: #1e293b;
-            --bg-card: #334155;
-            --bg-input: #475569;
+            --bg-dark: #111827;
+            --bg-card: #1f2937;
+            --bg-input: #374151;
             
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
             
-            --border-color: #475569;
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.2);
+            --border-color: #4b5563;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.3);
             
-            --radius-lg: 20px;
+            --radius-lg: 16px;
             --radius-md: 12px;
             --radius-sm: 8px;
             
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #1e1b4b 100%);
+            background: linear-gradient(135deg, #1e1b4b 0%, #111827 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -57,133 +56,90 @@
             color: var(--text-primary);
         }
 
-        /* ===== AUTH PAGE - DARK MODE PROFESSIONAL ===== */
+        /* ===== AUTH PAGE ===== */
         .auth-container {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(20px);
+            background: var(--bg-card);
             width: 100%;
-            max-width: 500px;
-            padding: 50px 40px;
+            max-width: 450px;
+            padding: 40px 35px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: slideUp 0.6s ease;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid var(--border-color);
+            animation: slideIn 0.4s ease;
         }
 
-        .auth-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-        }
-
-        .auth-container::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
-            z-index: 0;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .logo-container {
             text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-            z-index: 1;
+            margin-bottom: 35px;
         }
 
         .logo {
             display: inline-flex;
             align-items: center;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
         .logo-icon {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 20px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 32px;
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            font-size: 28px;
         }
 
         .logo-text {
-            font-size: 42px;
-            font-weight: 900;
+            font-size: 36px;
+            font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .tagline {
             color: var(--text-secondary);
-            font-size: 16px;
-            margin-top: 10px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+            font-size: 15px;
+            margin-top: 5px;
         }
 
         .form-group {
-            margin-bottom: 25px;
-            position: relative;
-            z-index: 1;
+            margin-bottom: 20px;
         }
 
         .form-label {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 8px;
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 15px;
-        }
-
-        .form-label i {
-            color: var(--primary-light);
-            width: 20px;
-            text-align: center;
+            font-size: 14px;
         }
 
         .form-control {
             width: 100%;
-            padding: 18px 20px 18px 50px;
-            background: rgba(71, 85, 105, 0.3);
+            padding: 15px;
+            background: var(--bg-input);
             border: 2px solid transparent;
             border-radius: var(--radius-md);
-            font-size: 16px;
             color: var(--text-primary);
+            font-size: 15px;
             transition: var(--transition);
-            outline: none;
         }
 
         .form-control:focus {
             border-color: var(--primary);
-            background: rgba(71, 85, 105, 0.5);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
         }
 
         .input-with-icon {
@@ -192,123 +148,85 @@
 
         .input-icon {
             position: absolute;
-            left: 18px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--primary-light);
-            font-size: 18px;
-            z-index: 2;
         }
 
         .btn {
             width: 100%;
-            padding: 20px;
+            padding: 16px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
             border-radius: var(--radius-md);
-            font-weight: 700;
-            font-size: 17px;
+            font-weight: 600;
+            font-size: 16px;
             cursor: pointer;
             transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 10px;
             margin-top: 10px;
-            letter-spacing: 0.5px;
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: 0.5s;
-            z-index: -1;
-        }
-
-        .btn:hover::before {
-            left: 100%;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
         }
 
         .btn-danger {
             background: linear-gradient(135deg, var(--danger), #dc2626);
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
         }
 
-        .btn-danger:hover {
-            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
-        }
-
-        /* ===== MAIN APP CONTAINER ===== */
+        /* ===== MAIN APP ===== */
         .app-container {
             display: none;
-            width: 98vw;
-            height: 95vh;
-            background: var(--bg-sidebar);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-dark);
             overflow: hidden;
-            display: flex;
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* ===== SIDEBAR - PROFESSIONAL DESIGN ===== */
+        /* ===== SIDEBAR ===== */
         .sidebar {
-            width: 400px;
-            background: var(--bg-sidebar);
+            width: 380px;
+            background: var(--bg-card);
             display: flex;
             flex-direction: column;
-            z-index: 10;
             border-right: 1px solid var(--border-color);
         }
 
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+            }
+        }
+
         .user-profile {
-            padding: 25px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.2));
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(236, 72, 153, 0.1));
             border-bottom: 1px solid var(--border-color);
         }
 
         .profile-info {
             display: flex;
             align-items: center;
-            gap: 15px;
-            cursor: pointer;
+            gap: 12px;
         }
 
         .profile-avatar {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
+            font-size: 20px;
             overflow: hidden;
-            position: relative;
         }
 
         .profile-avatar img {
@@ -317,59 +235,54 @@
             object-fit: cover;
         }
 
-        .profile-details h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 5px;
+        .profile-name {
+            font-weight: 600;
+            font-size: 16px;
         }
 
-        .profile-details small {
-            color: var(--primary-light);
+        .profile-status {
             font-size: 13px;
+            color: var(--success);
             display: flex;
             align-items: center;
             gap: 5px;
         }
 
-        .online-status {
+        .status-dot {
             width: 8px;
             height: 8px;
             background: var(--success);
             border-radius: 50%;
-            display: inline-block;
-            animation: blink 2s infinite;
+            animation: pulse 2s infinite;
         }
 
-        @keyframes blink {
+        @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
 
         .profile-actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        .icon-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            background: rgba(71, 85, 105, 0.3);
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-input);
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-secondary);
-            font-size: 18px;
             cursor: pointer;
             transition: var(--transition);
-            position: relative;
         }
 
-        .icon-btn:hover {
+        .action-btn:hover {
             background: var(--primary);
             color: white;
-            transform: translateY(-2px);
         }
 
         .notification-badge {
@@ -379,147 +292,101 @@
             background: var(--danger);
             color: white;
             font-size: 10px;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
         }
 
         /* ===== NAV TABS ===== */
         .nav-tabs {
             display: flex;
-            background: rgba(30, 41, 59, 0.8);
-            padding: 10px;
+            background: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
         }
 
         .nav-tab {
             flex: 1;
             text-align: center;
-            padding: 18px 10px;
+            padding: 16px;
             cursor: pointer;
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 15px;
-            border-radius: var(--radius-sm);
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
             transition: var(--transition);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-tab i {
-            font-size: 20px;
         }
 
         .nav-tab.active {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
         }
 
         .nav-tab:hover:not(.active) {
-            background: rgba(71, 85, 105, 0.3);
-            color: var(--text-primary);
+            background: var(--bg-input);
         }
 
-        /* ===== SEARCH BOX ===== */
+        /* ===== SEARCH ===== */
         .search-box {
-            padding: 20px;
+            padding: 15px;
             border-bottom: 1px solid var(--border-color);
         }
 
-        .search-container {
-            position: relative;
-        }
-
-        .search-container input {
+        .search-input {
             width: 100%;
-            padding: 16px 20px 16px 55px;
-            background: rgba(71, 85, 105, 0.3);
-            border: 2px solid transparent;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             color: var(--text-primary);
-            font-size: 15px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
             outline: none;
-            transition: var(--transition);
-        }
-
-        .search-container input:focus {
             border-color: var(--primary);
-            background: rgba(71, 85, 105, 0.5);
-        }
-
-        .search-container::before {
-            content: '\f002';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--primary-light);
-            font-size: 16px;
-            z-index: 2;
         }
 
         /* ===== LIST CONTAINER ===== */
         .list-container {
             flex: 1;
             overflow-y: auto;
-            background: transparent;
-        }
-
-        .list-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .list-container::-webkit-scrollbar-track {
-            background: rgba(71, 85, 105, 0.2);
-        }
-
-        .list-container::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
         }
 
         .list-item {
-            padding: 20px 25px;
-            border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
             transition: var(--transition);
-            position: relative;
         }
 
         .list-item:hover {
-            background: rgba(99, 102, 241, 0.1);
-            transform: translateX(5px);
+            background: var(--bg-input);
         }
 
         .list-item.active {
-            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent);
-            border-left: 4px solid var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+            border-left: 3px solid var(--primary);
         }
 
         .list-avatar {
-            width: 55px;
-            height: 55px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 18px;
             position: relative;
             overflow: hidden;
             flex-shrink: 0;
-            font-size: 22px;
         }
 
         .list-avatar img {
@@ -530,59 +397,40 @@
 
         .list-status {
             position: absolute;
-            bottom: 3px;
-            right: 3px;
-            width: 14px;
-            height: 14px;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            border: 2px solid var(--bg-sidebar);
+            border: 2px solid var(--bg-card);
         }
 
         .status-online { background: var(--success); }
         .status-offline { background: var(--text-muted); }
-        .status-away { background: var(--warning); }
 
         .list-content {
             flex: 1;
             min-width: 0;
         }
 
-        .list-content h4 {
-            font-size: 16px;
-            font-weight: 700;
+        .list-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 3px;
             color: var(--text-primary);
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
-        .list-content h4 small {
+        .list-username {
             font-size: 13px;
-            color: var(--primary-light);
-            font-weight: 500;
-        }
-
-        .list-content p {
-            font-size: 14px;
             color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .unread-badge {
             background: var(--primary);
             color: white;
             font-size: 11px;
-            font-weight: bold;
-            min-width: 22px;
-            height: 22px;
-            padding: 0 6px;
-            border-radius: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 10px;
         }
 
         /* ===== CHAT AREA ===== */
@@ -591,187 +439,120 @@
             display: flex;
             flex-direction: column;
             background: var(--bg-dark);
-            position: relative;
         }
 
         .chat-header {
-            padding: 20px 30px;
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            background: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            z-index: 5;
         }
 
-        .chat-header-left {
+        .chat-user {
             display: flex;
             align-items: center;
-            gap: 20px;
-        }
-
-        .back-btn {
-            display: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            background: rgba(71, 85, 105, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 20px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .back-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .chat-user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .chat-user-info h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 5px;
-        }
-
-        .chat-user-info small {
-            color: var(--text-secondary);
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .chat-actions {
-            display: flex;
             gap: 12px;
         }
 
-        /* ===== MESSAGES AREA ===== */
+        .chat-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ===== MESSAGES ===== */
         .messages {
             flex: 1;
-            padding: 30px;
+            padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" opacity="0.03"><defs><pattern id="a" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M0 40L40 0H20L0 20zm40 20V20L20 40z" fill="%236366f1"/></pattern></defs><rect width="400" height="400" fill="url(%23a)"/></svg>');
-        }
-
-        .messages::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .messages::-webkit-scrollbar-track {
-            background: rgba(71, 85, 105, 0.2);
-        }
-
-        .messages::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
+            gap: 10px;
+            background: var(--bg-dark);
         }
 
         .msg {
             max-width: 70%;
-            padding: 18px 22px;
-            border-radius: 25px;
-            font-size: 15px;
-            line-height: 1.5;
+            padding: 12px 15px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
             position: relative;
-            word-wrap: break-word;
-            animation: messageSlide 0.3s ease;
+            animation: msgSlide 0.2s ease;
         }
 
-        @keyframes messageSlide {
-            from { transform: translateY(10px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes msgSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .msg.sent {
             align-self: flex-end;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            border-bottom-right-radius: 8px;
-            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+            border-bottom-right-radius: 5px;
         }
 
         .msg.received {
             align-self: flex-start;
-            background: rgba(71, 85, 105, 0.3);
-            backdrop-filter: blur(10px);
+            background: var(--bg-input);
             color: var(--text-primary);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-bottom-left-radius: 8px;
+            border-bottom-left-radius: 5px;
         }
 
         .msg-text {
-            display: block;
-            margin-bottom: 8px;
+            word-break: break-word;
         }
 
         .msg-time {
-            font-size: 12px;
+            font-size: 11px;
+            margin-top: 5px;
             opacity: 0.7;
             text-align: right;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 5px;
         }
 
         .msg-status {
             font-size: 11px;
+            margin-left: 5px;
         }
 
         /* ===== INPUT AREA ===== */
         .input-area {
-            padding: 25px 30px;
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px);
+            padding: 15px;
+            background: var(--bg-card);
             border-top: 1px solid var(--border-color);
             display: flex;
-            gap: 15px;
-            align-items: center;
+            gap: 10px;
+            align-items: flex-end;
         }
 
         .msg-input-container {
             flex: 1;
-            position: relative;
         }
 
         #msg-input {
             width: 100%;
-            padding: 20px 25px;
-            background: rgba(71, 85, 105, 0.3);
-            border: 2px solid transparent;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             color: var(--text-primary);
-            font-size: 16px;
-            outline: none;
+            font-size: 14px;
             resize: none;
-            min-height: 60px;
+            min-height: 50px;
             max-height: 120px;
-            transition: var(--transition);
+            line-height: 1.5;
         }
 
         #msg-input:focus {
+            outline: none;
             border-color: var(--primary);
-            background: rgba(71, 85, 105, 0.5);
         }
 
         .send-btn {
-            width: 65px;
-            height: 65px;
+            width: 50px;
+            height: 50px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
@@ -780,69 +561,34 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 18px;
             transition: var(--transition);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            flex-shrink: 0;
         }
 
         .send-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
         }
 
         /* ===== TYPING INDICATOR ===== */
         .typing-indicator {
-            padding: 0 30px 15px;
-            font-size: 13px;
-            color: var(--primary-light);
+            padding: 0 20px 10px;
+            font-size: 12px;
+            color: var(--primary);
             font-style: italic;
             display: none;
-        }
-
-        .typing-indicator i {
-            margin-right: 8px;
-        }
-
-        /* ===== EMPTY STATE ===== */
-        .empty-state {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-muted);
-            text-align: center;
-            padding: 50px;
-        }
-
-        .empty-state i {
-            font-size: 80px;
-            margin-bottom: 25px;
-            opacity: 0.3;
-        }
-
-        .empty-state h3 {
-            font-size: 26px;
-            margin-bottom: 15px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state p {
-            font-size: 16px;
-            line-height: 1.6;
-            max-width: 400px;
         }
 
         /* ===== MODALS ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.8);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            animation: fadeIn 0.3s ease;
+            padding: 20px;
         }
 
         .modal-overlay.active {
@@ -850,22 +596,19 @@
         }
 
         .modal {
-            background: var(--bg-sidebar);
-            width: 90%;
-            max-width: 550px;
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 500px;
             border-radius: var(--radius-lg);
             overflow: hidden;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             max-height: 90vh;
             display: flex;
             flex-direction: column;
         }
 
         .modal-header {
-            padding: 25px 30px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.2));
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(236, 72, 153, 0.1));
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
@@ -873,101 +616,65 @@
         }
 
         .modal-header h3 {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .modal-header h3 i {
-            color: var(--primary-light);
+            font-size: 18px;
+            font-weight: 600;
         }
 
         .modal-body {
-            padding: 30px;
+            padding: 20px;
             overflow-y: auto;
             flex: 1;
         }
 
-        /* ===== DELETE ACCOUNT MODAL ===== */
-        .delete-warning {
-            text-align: center;
-            padding: 20px;
-        }
+        /* ===== UTILITY ===== */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+        .mb-15 { margin-bottom: 15px; }
+        .mt-15 { margin-top: 15px; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-10 { gap: 10px; }
+        .gap-15 { gap: 15px; }
 
-        .delete-warning i {
-            font-size: 70px;
-            color: var(--danger);
-            margin-bottom: 20px;
-        }
-
-        .delete-warning h4 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            color: var(--text-primary);
-        }
-
-        .delete-warning p {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-
-        .delete-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        /* ===== RESPONSIVE DESIGN ===== */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 350px;
-            }
-        }
-
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .app-container {
-                width: 100vw;
-                height: 100vh;
-                border-radius: 0;
+                flex-direction: column;
             }
             
             .sidebar {
                 width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .chat-area {
+                flex: 1;
+            }
+            
+            .msg {
+                max-width: 85%;
             }
             
             .auth-container {
-                padding: 35px 25px;
-                margin: 15px;
+                padding: 30px 20px;
             }
             
-            .back-btn {
-                display: flex;
+            .logo-text {
+                font-size: 28px;
             }
             
-            .chat-user-info .avatar {
-                display: none;
-            }
-            
-            .modal {
-                width: 95%;
-                margin: 10px;
+            .logo-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
             }
         }
 
         @media (max-width: 480px) {
-            .logo {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .logo-text {
-                font-size: 32px;
-            }
-            
             .nav-tab span {
                 display: none;
             }
@@ -976,41 +683,15 @@
                 padding: 15px 5px;
             }
             
-            .msg {
-                max-width: 85%;
+            .profile-actions {
+                flex-wrap: wrap;
             }
         }
-
-        /* ===== ANIMATIONS ===== */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        /* ===== UTILITY CLASSES ===== */
-        .hidden { display: none !important; }
-        .text-center { text-align: center; }
-        .text-muted { color: var(--text-muted); }
-        .mb-20 { margin-bottom: 20px; }
-        .mt-20 { margin-top: 20px; }
-        .flex { display: flex; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .gap-10 { gap: 10px; }
-        .gap-15 { gap: 15px; }
-        .gap-20 { gap: 20px; }
-        .w-100 { width: 100%; }
-        .h-100 { height: 100%; }
     </style>
 </head>
 <body>
 
-    <!-- Authentication Container -->
+    <!-- Auth Container -->
     <div class="auth-container" id="auth-box">
         <div class="logo-container">
             <div class="logo">
@@ -1019,12 +700,12 @@
                 </div>
                 <div class="logo-text">Learnox Pro</div>
             </div>
-            <div class="tagline">World's Most Secure & Private Chat Platform</div>
+            <div class="tagline">Secure & Fast Real-time Chat</div>
         </div>
 
         <div id="auth-messages">
-            <div id="error-msg" class="hidden" style="color: var(--danger); margin-bottom: 20px;"></div>
-            <div id="success-msg" class="hidden" style="color: var(--success); margin-bottom: 20px;"></div>
+            <div id="error-msg" class="hidden" style="color: var(--danger); margin-bottom: 15px;"></div>
+            <div id="success-msg" class="hidden" style="color: var(--success); margin-bottom: 15px;"></div>
         </div>
 
         <form id="auth-form">
@@ -1033,11 +714,8 @@
                     <i class="fas fa-user"></i>
                     Username
                 </label>
-                <div class="input-with-icon">
-                    <i class="fas fa-user input-icon"></i>
-                    <input type="text" id="username" class="form-control" placeholder="Enter your username" required>
-                </div>
-                <div id="username-availability" class="hidden" style="margin-top: 8px;"></div>
+                <input type="text" id="username" class="form-control" placeholder="Enter username" required>
+                <div id="username-availability" class="hidden mt-15"></div>
             </div>
 
             <div class="form-group hidden" id="name-group">
@@ -1045,10 +723,7 @@
                     <i class="fas fa-user-tag"></i>
                     Full Name
                 </label>
-                <div class="input-with-icon">
-                    <i class="fas fa-user-tag input-icon"></i>
-                    <input type="text" id="name" class="form-control" placeholder="Enter your full name" required>
-                </div>
+                <input type="text" id="name" class="form-control" placeholder="Enter your name" required>
             </div>
 
             <div class="form-group hidden" id="email-group">
@@ -1056,10 +731,7 @@
                     <i class="fas fa-envelope"></i>
                     Email Address
                 </label>
-                <div class="input-with-icon">
-                    <i class="fas fa-envelope input-icon"></i>
-                    <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
-                </div>
+                <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
             </div>
 
             <div class="form-group">
@@ -1069,8 +741,8 @@
                 </label>
                 <div class="input-with-icon">
                     <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
-                    <button type="button" class="password-toggle" onclick="togglePassword('password')" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary-light); cursor: pointer;">
+                    <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+                    <button type="button" onclick="togglePassword('password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary-light); cursor: pointer;">
                         <i class="far fa-eye"></i>
                     </button>
                 </div>
@@ -1083,8 +755,8 @@
                 </label>
                 <div class="input-with-icon">
                     <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="confirm-password" class="form-control" placeholder="Confirm your password" required>
-                    <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary-light); cursor: pointer;">
+                    <input type="password" id="confirm-password" class="form-control" placeholder="Confirm password" required>
+                    <button type="button" onclick="togglePassword('confirm-password')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary-light); cursor: pointer;">
                         <i class="far fa-eye"></i>
                     </button>
                 </div>
@@ -1096,42 +768,48 @@
             </button>
         </form>
 
-        <div class="text-center mt-20">
+        <div class="text-center mt-15">
             <span id="switch-text" class="text-muted">New to Learnox?</span>
-            <a href="#" id="switch-auth" style="color: var(--primary-light); margin-left: 10px; text-decoration: none; font-weight: 600;">Create Account</a>
+            <a href="#" id="switch-auth" style="color: var(--primary); margin-left: 8px; font-weight: 600;">Create Account</a>
         </div>
     </div>
 
-    <!-- Main App Container -->
+    <!-- Main App -->
     <div class="app-container" id="app-box" style="display: none;">
         <!-- Sidebar -->
         <div class="sidebar">
-            <!-- User Profile Section -->
+            <!-- User Profile -->
             <div class="user-profile">
-                <div class="profile-info" onclick="openMyProfile()">
+                <div class="profile-info">
                     <div class="profile-avatar" id="my-avatar-display">
                         <i class="fas fa-user"></i>
                     </div>
-                    <div class="profile-details">
-                        <h3 id="my-name">Loading...</h3>
-                        <small><span class="online-status"></span> Online</small>
+                    <div>
+                        <div class="profile-name" id="my-name">User</div>
+                        <div class="profile-status">
+                            <span class="status-dot"></span>
+                            <span>Online</span>
+                        </div>
                     </div>
                 </div>
                 <div class="profile-actions">
-                    <div class="icon-btn" onclick="showFriendRequests()" title="Friend Requests">
+                    <div class="action-btn" onclick="showFriendRequests()" title="Friend Requests">
                         <i class="fas fa-user-plus"></i>
                         <div class="notification-badge" id="notification-badge" style="display: none;"></div>
                     </div>
-                    <div class="icon-btn" onclick="showBlockedUsers()" title="Blocked Users">
+                    <div class="action-btn" onclick="showBlockedUsers()" title="Blocked Users">
                         <i class="fas fa-user-slash"></i>
                     </div>
-                    <div class="icon-btn" onclick="logout()" title="Logout">
+                    <div class="action-btn" onclick="openMyProfile()" title="My Profile">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <div class="action-btn" onclick="logout()" title="Logout">
                         <i class="fas fa-sign-out-alt"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Navigation Tabs -->
+            <!-- Navigation -->
             <div class="nav-tabs">
                 <div class="nav-tab active" data-tab="friends" onclick="switchTab('friends')">
                     <i class="fas fa-user-friends"></i>
@@ -1147,16 +825,14 @@
                 </div>
             </div>
 
-            <!-- Search Box -->
+            <!-- Search -->
             <div class="search-box">
-                <div class="search-container">
-                    <input type="text" id="global-search" placeholder="Search by username or name...">
-                </div>
+                <input type="text" class="search-input" id="global-search" placeholder="Search by username or name...">
             </div>
 
             <!-- List Container -->
             <div class="list-container" id="list-container">
-                <!-- Dynamic content will load here -->
+                <!-- Dynamic content -->
             </div>
         </div>
 
@@ -1164,38 +840,31 @@
         <div class="chat-area" id="chat-area" style="display: none;">
             <!-- Chat Header -->
             <div class="chat-header">
-                <div class="chat-header-left">
-                    <div class="back-btn" onclick="closeChat()" id="back-btn">
-                        <i class="fas fa-arrow-left"></i>
+                <div class="chat-user">
+                    <div class="list-avatar" id="chat-header-avatar">
+                        <i class="fas fa-user"></i>
                     </div>
-                    <div class="chat-user-info">
-                        <div class="list-avatar" id="chat-header-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div>
-                            <h3 id="chat-header-name">User Name</h3>
-                            <small id="chat-header-status">
-                                <span class="online-status"></span> Offline
-                            </small>
-                        </div>
+                    <div>
+                        <div class="list-name" id="chat-header-name">User Name</div>
+                        <div class="list-username" id="chat-header-status">Offline</div>
                     </div>
                 </div>
-                <div class="chat-actions">
-                    <div class="icon-btn" onclick="viewChatProfile()" title="View Profile">
+                <div class="chat-header-actions">
+                    <div class="action-btn" onclick="viewChatProfile()" title="View Profile">
                         <i class="fas fa-info-circle"></i>
                     </div>
-                    <div class="icon-btn" onclick="blockUser()" title="Block User">
+                    <div class="action-btn" onclick="blockUser()" title="Block User">
                         <i class="fas fa-ban"></i>
                     </div>
-                    <div class="icon-btn" onclick="deleteFriend()" title="Remove Friend">
+                    <div class="action-btn" style="color: var(--danger);" onclick="deleteFriend()" title="Remove Friend">
                         <i class="fas fa-trash-alt"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Messages Container -->
+            <!-- Messages -->
             <div class="messages" id="messages">
-                <!-- Messages will load here -->
+                <!-- Messages will appear here -->
             </div>
 
             <!-- Typing Indicator -->
@@ -1206,105 +875,70 @@
 
             <!-- Input Area -->
             <div class="input-area">
-                <div class="icon-btn" onclick="toggleEmoji()" title="Emoji">
-                    <i class="far fa-smile"></i>
-                </div>
                 <div class="msg-input-container">
-                    <textarea id="msg-input" placeholder="Type your message here..." 
-                              onkeypress="handleEnter(event)" 
-                              oninput="handleTyping()"
-                              rows="1"></textarea>
+                    <textarea id="msg-input" placeholder="Type a message..." 
+                              onkeydown="handleKeyDown(event)" 
+                              oninput="handleTyping()"></textarea>
                 </div>
-                <button class="send-btn" onclick="sendMessage()" title="Send Message">
+                <button class="send-btn" onclick="sendMessage()" title="Send">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
-
-            <!-- Emoji Picker -->
-            <div id="emoji-picker" style="display: none;"></div>
         </div>
 
         <!-- Empty State -->
         <div class="chat-area" id="empty-chat-placeholder" style="display: flex;">
-            <div class="empty-state">
-                <div>
-                    <i class="fas fa-comment-dots"></i>
-                    <h3>Select a conversation</h3>
-                    <p>Start chatting with your friends by selecting a conversation from the list</p>
-                </div>
+            <div style="text-align: center; padding: 50px 20px; width: 100%;">
+                <i class="fas fa-comments" style="font-size: 60px; color: var(--text-muted); margin-bottom: 20px;"></i>
+                <h3 style="color: var(--text-secondary); margin-bottom: 10px;">Select a conversation</h3>
+                <p style="color: var(--text-muted);">Start chatting with your friends!</p>
             </div>
         </div>
     </div>
 
+    <!-- Modals -->
     <!-- My Profile Modal -->
     <div class="modal-overlay" id="my-profile-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3><i class="fas fa-user-circle"></i> My Profile</h3>
-                <div class="icon-btn" onclick="closeModal('my-profile-modal')">
+                <h3>My Profile</h3>
+                <div class="action-btn" onclick="closeModal('my-profile-modal')">
                     <i class="fas fa-times"></i>
                 </div>
             </div>
             <div class="modal-body">
-                <div class="text-center mb-20">
-                    <div class="profile-avatar" style="width: 120px; height: 120px; margin: 0 auto 20px;">
-                        <img id="edit-avatar-preview" src="" style="display: none;">
-                        <i class="fas fa-user" id="edit-avatar-icon" style="font-size: 50px;"></i>
-                    </div>
-                    <label style="color: var(--primary-light); cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-camera"></i> Change Photo
-                        <input type="file" id="avatar-input" hidden accept="image/*" onchange="previewAvatar(event)">
-                    </label>
-                </div>
-                
                 <form id="profile-form">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-user"></i> Username
-                        </label>
-                        <input type="text" id="edit-username" class="form-control" readonly style="background: rgba(71, 85, 105, 0.2);">
+                    <div class="form-group mb-15">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="edit-username" class="form-control" readonly>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-user-tag"></i> Full Name
-                        </label>
+                    <div class="form-group mb-15">
+                        <label class="form-label">Full Name</label>
                         <input type="text" id="edit-name" class="form-control" required>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-envelope"></i> Email
-                        </label>
-                        <input type="email" id="edit-email" class="form-control" readonly style="background: rgba(71, 85, 105, 0.2);">
+                    <div class="form-group mb-15">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="edit-email" class="form-control" readonly>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-lock"></i> Current Password (Required for changes)
-                        </label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="password" id="edit-password" class="form-control" required placeholder="Enter current password">
-                        </div>
+                    <div class="form-group mb-15">
+                        <label class="form-label">Current Password (for changes)</label>
+                        <input type="password" id="edit-password" class="form-control" placeholder="Enter password to save changes">
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-key"></i> New Password (Optional)
-                        </label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-key input-icon"></i>
-                            <input type="password" id="new-password" class="form-control" placeholder="Leave empty to keep current">
-                        </div>
+                    <div class="form-group mb-20">
+                        <label class="form-label">New Password (optional)</label>
+                        <input type="password" id="new-password" class="form-control" placeholder="Leave empty to keep current">
                     </div>
                     
-                    <button type="submit" class="btn mb-20">
+                    <button type="submit" class="btn mb-15">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
                     
                     <button type="button" class="btn btn-danger" onclick="showDeleteAccountModal()">
-                        <i class="fas fa-trash-alt"></i> Delete My Account
+                        <i class="fas fa-trash-alt"></i> Delete Account
                     </button>
                 </form>
             </div>
@@ -1315,80 +949,39 @@
     <div class="modal-overlay" id="delete-account-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3><i class="fas fa-exclamation-triangle"></i> Delete Account</h3>
-                <div class="icon-btn" onclick="closeModal('delete-account-modal')">
+                <h3>Delete Account</h3>
+                <div class="action-btn" onclick="closeModal('delete-account-modal')">
                     <i class="fas fa-times"></i>
                 </div>
             </div>
             <div class="modal-body">
-                <div class="delete-warning">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <h4>Are you absolutely sure?</h4>
-                    <p>
-                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers. 
-                        All your messages, friends, and profile information will be lost forever.
+                <div class="text-center mb-20">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 50px; color: var(--danger); margin-bottom: 15px;"></i>
+                    <h4 style="margin-bottom: 10px;">Are you sure?</h4>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">
+                        This will permanently delete your account and all your data.
                     </p>
-                    
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-lock"></i> Enter your password to confirm
-                        </label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="password" id="delete-password" class="form-control" placeholder="Enter your password">
-                        </div>
-                    </div>
-                    
-                    <div class="delete-actions">
-                        <button class="btn" onclick="closeModal('delete-account-modal')" style="flex: 1;">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                        <button class="btn btn-danger" onclick="deleteAccount()" style="flex: 1;">
-                            <i class="fas fa-trash-alt"></i> Delete Account
-                        </button>
-                    </div>
+                </div>
+                
+                <div class="form-group mb-20">
+                    <label class="form-label">Enter your password to confirm</label>
+                    <input type="password" id="delete-password" class="form-control" placeholder="Your password">
+                </div>
+                
+                <div class="flex gap-10">
+                    <button class="btn" onclick="closeModal('delete-account-modal')" style="flex: 1;">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteAccount()" style="flex: 1;">
+                        Delete Account
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Friend Requests Modal -->
-    <div class="modal-overlay" id="friend-requests-modal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-plus"></i> Friend Requests</h3>
-                <div class="icon-btn" onclick="closeModal('friend-requests-modal')">
-                    <i class="fas fa-times"></i>
-                </div>
-            </div>
-            <div class="modal-body" id="friend-requests-list">
-                <!-- Friend requests will load here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Blocked Users Modal -->
-    <div class="modal-overlay" id="blocked-users-modal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-slash"></i> Blocked Users</h3>
-                <div class="icon-btn" onclick="closeModal('blocked-users-modal')">
-                    <i class="fas fa-times"></i>
-                </div>
-            </div>
-            <div class="modal-body" id="blocked-users-list">
-                <!-- Blocked users will load here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Message Options Popup -->
-    <div class="msg-options-popup" id="msg-options-popup" style="display: none; position: absolute; background: var(--bg-sidebar); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow); z-index: 1000; min-width: 180px;">
-        <!-- Message options will load here -->
     </div>
 
     <script>
-        // ===== CONFIGURATION =====
+        // ===== CONFIG =====
         const API = '/api';
         let socket = null;
         let token = null;
@@ -1396,61 +989,47 @@
         let currentChatId = null;
         let currentChatUser = null;
         let isRegister = false;
-        let emojiPicker = null;
         let typingTimeout = null;
-        let usernameCheckTimeout = null;
         
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', initAuth);
-        
+        // ===== AUTH =====
         function initAuth() {
-            const savedToken = localStorage.getItem('token');
-            const savedUser = localStorage.getItem('user');
-            
-            if (savedToken && savedUser) {
-                token = savedToken;
-                currentUser = JSON.parse(savedUser);
-                initApp();
+            token = localStorage.getItem('token');
+            if (token) {
+                // Verify token is still valid
+                fetch(`${API}/verify-token`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => {
+                    if (res.ok) {
+                        const userData = localStorage.getItem('user');
+                        if (userData) {
+                            currentUser = JSON.parse(userData);
+                            initApp();
+                        } else {
+                            localStorage.removeItem('token');
+                            showAuth();
+                        }
+                    } else {
+                        localStorage.removeItem('token');
+                        showAuth();
+                    }
+                })
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    showAuth();
+                });
             } else {
-                document.getElementById('auth-box').style.display = 'block';
-                setupAuthListeners();
+                showAuth();
             }
         }
         
+        function showAuth() {
+            document.getElementById('auth-box').style.display = 'block';
+            setupAuthListeners();
+        }
+        
         function setupAuthListeners() {
-            // Username availability check
-            document.getElementById('username').addEventListener('input', function(e) {
-                clearTimeout(usernameCheckTimeout);
-                const username = e.target.value.trim();
-                
-                if (username.length < 3) {
-                    document.getElementById('username-availability').innerHTML = '';
-                    document.getElementById('username-availability').classList.add('hidden');
-                    return;
-                }
-                
-                usernameCheckTimeout = setTimeout(async () => {
-                    try {
-                        const res = await fetch(`${API}/check-username/${username}`);
-                        const data = await res.json();
-                        
-                        const availabilityDiv = document.getElementById('username-availability');
-                        availabilityDiv.classList.remove('hidden');
-                        
-                        if (data.available) {
-                            availabilityDiv.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Username is available';
-                            availabilityDiv.style.color = 'var(--success)';
-                        } else {
-                            availabilityDiv.innerHTML = '<i class="fas fa-times-circle" style="color: var(--danger);"></i> Username is taken';
-                            availabilityDiv.style.color = 'var(--danger)';
-                        }
-                    } catch (error) {
-                        console.error('Username check failed:', error);
-                    }
-                }, 500);
-            });
-            
-            // Toggle between login and register
+            // Toggle login/register
             document.getElementById('switch-auth').addEventListener('click', function(e) {
                 e.preventDefault();
                 isRegister = !isRegister;
@@ -1458,14 +1037,9 @@
                 const nameGroup = document.getElementById('name-group');
                 const emailGroup = document.getElementById('email-group');
                 const confirmGroup = document.getElementById('confirm-password-group');
-                const submitBtn = document.getElementById('submit-btn');
                 const submitText = document.getElementById('submit-text');
                 const switchText = document.getElementById('switch-text');
                 const switchLink = document.getElementById('switch-auth');
-                
-                // Clear messages
-                document.getElementById('error-msg').classList.add('hidden');
-                document.getElementById('success-msg').classList.add('hidden');
                 
                 if (isRegister) {
                     nameGroup.classList.remove('hidden');
@@ -1482,9 +1056,13 @@
                     switchText.textContent = 'New to Learnox?';
                     switchLink.textContent = 'Create Account';
                 }
+                
+                // Clear messages
+                document.getElementById('error-msg').classList.add('hidden');
+                document.getElementById('success-msg').classList.add('hidden');
             });
             
-            // Auth form submission
+            // Form submission
             document.getElementById('auth-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -1494,38 +1072,25 @@
                 const email = document.getElementById('email').value;
                 const confirmPassword = document.getElementById('confirm-password').value;
                 
-                const errorMsg = document.getElementById('error-msg');
-                const successMsg = document.getElementById('success-msg');
-                
                 // Validation
                 if (!username || !password) {
-                    showError('Please fill in all required fields');
+                    showAuthError('Please fill in all fields');
                     return;
                 }
                 
                 if (isRegister) {
                     if (!name || !email) {
-                        showError('Please fill in all fields');
+                        showAuthError('Please fill in all fields');
                         return;
                     }
                     
                     if (password.length < 6) {
-                        showError('Password must be at least 6 characters');
+                        showAuthError('Password must be at least 6 characters');
                         return;
                     }
                     
                     if (password !== confirmPassword) {
-                        showError('Passwords do not match');
-                        return;
-                    }
-                    
-                    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-                        showError('Username must be 3-20 characters (letters, numbers, underscores only)');
-                        return;
-                    }
-                    
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                        showError('Please enter a valid email address');
+                        showAuthError('Passwords do not match');
                         return;
                     }
                 }
@@ -1551,25 +1116,17 @@
                         throw new Error(data.error || 'Authentication failed');
                     }
                     
-                    // Save token and user data
+                    // Save token and user
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     
-                    if (isRegister) {
-                        showSuccess('Account created successfully! Redirecting...');
-                        setTimeout(() => {
-                            token = data.token;
-                            currentUser = data.user;
-                            initApp();
-                        }, 1500);
-                    } else {
-                        token = data.token;
-                        currentUser = data.user;
-                        initApp();
-                    }
+                    token = data.token;
+                    currentUser = data.user;
+                    
+                    initApp();
                     
                 } catch (error) {
-                    showError(error.message);
+                    showAuthError(error.message);
                     const submitBtn = document.getElementById('submit-btn');
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
@@ -1577,34 +1134,39 @@
             });
         }
         
-        // ===== APP INITIALIZATION =====
+        function showAuthError(message) {
+            const errorMsg = document.getElementById('error-msg');
+            errorMsg.textContent = message;
+            errorMsg.classList.remove('hidden');
+            document.getElementById('success-msg').classList.add('hidden');
+        }
+        
+        function showAuthSuccess(message) {
+            const successMsg = document.getElementById('success-msg');
+            successMsg.textContent = message;
+            successMsg.classList.remove('hidden');
+            document.getElementById('error-msg').classList.add('hidden');
+        }
+        
+        // ===== APP =====
         function initApp() {
             document.getElementById('auth-box').style.display = 'none';
             document.getElementById('app-box').style.display = 'flex';
             
             // Update user info
-            updateUserInfo();
+            if (currentUser) {
+                document.getElementById('my-name').textContent = currentUser.name || currentUser.username;
+                if (currentUser.avatar) {
+                    document.getElementById('my-avatar-display').innerHTML = 
+                        `<img src="${currentUser.avatar}">`;
+                }
+            }
             
-            // Initialize socket connection
+            // Setup socket
             initSocket();
             
             // Load initial data
             switchTab('friends');
-            loadFriendRequests();
-            
-            // Setup app event listeners
-            setupAppListeners();
-        }
-        
-        function updateUserInfo() {
-            if (currentUser) {
-                document.getElementById('my-name').textContent = currentUser.name || 'User';
-                
-                if (currentUser.avatar) {
-                    document.getElementById('my-avatar-display').innerHTML = 
-                        `<img src="${currentUser.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
-                }
-            }
         }
         
         function initSocket() {
@@ -1613,106 +1175,41 @@
                 transports: ['websocket', 'polling']
             });
             
-            // Socket event listeners
             socket.on('connect', () => {
                 console.log('Connected to server');
             });
             
             socket.on('new_message', (data) => {
-                if (currentChatId === data.chatId && data.message.sender._id !== currentUser.id) {
+                if (currentChatId === data.chatId) {
                     appendMessage(data.message);
                     scrollToBottom();
-                    socket.emit('message_seen', { chatId: data.chatId, messageId: data.message._id });
                 }
                 refreshChatList();
             });
             
             socket.on('typing', (data) => {
                 if (currentChatId === data.chatId && data.userId !== currentUser.id) {
-                    document.getElementById('typing-text').textContent = `${data.userName} is typing...`;
-                    document.getElementById('typing-indicator').style.display = 'block';
+                    showTypingIndicator(data.userName);
                 }
             });
             
             socket.on('typing_stopped', (data) => {
                 if (currentChatId === data.chatId) {
-                    document.getElementById('typing-indicator').style.display = 'none';
+                    hideTypingIndicator();
                 }
             });
             
-            socket.on('user_status_changed', (data) => {
-                updateUserStatus(data.userId, data.status);
+            socket.on('message_read', (data) => {
+                updateMessageStatus(data.messageId, 'read');
             });
             
             socket.on('friend_request_received', (data) => {
                 updateNotificationBadge(1);
                 showNotification('New Friend Request', `${data.sender.name} sent you a friend request`);
             });
-            
-            socket.on('friend_request_accepted', (data) => {
-                showNotification('Friend Request Accepted', `${data.acceptorName} accepted your friend request`);
-                refreshFriendsList();
-            });
-            
-            socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-            });
         }
         
-        function setupAppListeners() {
-            // Global search
-            document.getElementById('global-search').addEventListener('input', function(e) {
-                searchUsers(e.target.value);
-            });
-            
-            // Profile form submission
-            document.getElementById('profile-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData();
-                formData.append('name', document.getElementById('edit-name').value);
-                formData.append('currentPassword', document.getElementById('edit-password').value);
-                
-                const newPassword = document.getElementById('new-password').value;
-                if (newPassword) {
-                    if (newPassword.length < 6) {
-                        alert('New password must be at least 6 characters');
-                        return;
-                    }
-                    formData.append('newPassword', newPassword);
-                }
-                
-                const fileInput = document.getElementById('avatar-input');
-                if (fileInput.files[0]) {
-                    formData.append('avatar', fileInput.files[0]);
-                }
-                
-                try {
-                    const res = await fetch(`${API}/profile`, {
-                        method: 'PUT',
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        body: formData
-                    });
-                    
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error);
-                    
-                    // Update local storage
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    currentUser = data.user;
-                    
-                    // Update UI
-                    updateUserInfo();
-                    closeModal('my-profile-modal');
-                    alert('Profile updated successfully!');
-                    
-                } catch (error) {
-                    alert('Failed to update profile: ' + error.message);
-                }
-            });
-        }
-        
-        // ===== TAB MANAGEMENT =====
+        // ===== TABS =====
         async function switchTab(tab) {
             // Update active tab
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -1722,12 +1219,14 @@
             
             if (tab === 'find') {
                 container.innerHTML = `
-                    <div class="empty-state" style="height: auto; padding: 40px 20px;">
-                        <i class="fas fa-search"></i>
-                        <h3>Search Users</h3>
-                        <p>Type in the search box above to find users by username or name</p>
+                    <div style="padding: 40px 20px; text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-search" style="font-size: 40px; margin-bottom: 15px;"></i>
+                        <p>Search for users by username or name</p>
                     </div>
                 `;
+                document.getElementById('global-search').addEventListener('input', function(e) {
+                    searchUsers(e.target.value);
+                });
                 return;
             }
             
@@ -1740,17 +1239,15 @@
                     }
                 });
                 
-                if (!res.ok) throw new Error('Failed to load data');
+                if (!res.ok) throw new Error('Failed to load');
                 
                 const data = await res.json();
                 renderList(data, tab);
             } catch (error) {
-                console.error(`Switch tab error:`, error);
                 container.innerHTML = `
-                    <div class="empty-state" style="height: auto; padding: 40px 20px;">
+                    <div style="padding: 40px 20px; text-align: center; color: var(--danger);">
                         <i class="fas fa-exclamation-circle"></i>
-                        <h3>Error Loading Data</h3>
-                        <p>${error.message}</p>
+                        <p>Failed to load data</p>
                     </div>
                 `;
             }
@@ -1761,13 +1258,12 @@
             
             if (!data || data.length === 0) {
                 let message = '';
-                if (type === 'friends') message = 'No friends yet. Use the Find tab to add friends.';
-                else if (type === 'chats') message = 'No conversations yet. Start chatting with your friends!';
+                if (type === 'friends') message = 'No friends yet. Use Find tab to add friends.';
+                else if (type === 'chats') message = 'No conversations yet.';
                 
                 container.innerHTML = `
-                    <div class="empty-state" style="height: auto; padding: 40px 20px;">
+                    <div style="padding: 40px 20px; text-align: center; color: var(--text-muted);">
                         <i class="fas fa-${type === 'friends' ? 'users' : 'comments'}"></i>
-                        <h3>No ${type} found</h3>
                         <p>${message}</p>
                     </div>
                 `;
@@ -1777,17 +1273,14 @@
             container.innerHTML = '';
             
             data.forEach(item => {
-                let user, chatId, lastMessage, unreadCount;
+                let user, chatId, unreadCount = 0;
                 
                 if (type === 'chats') {
                     chatId = item._id;
-                    user = item.otherParticipant || item.participants?.find(p => p._id !== currentUser.id) || {};
-                    lastMessage = item.lastMessage?.text || 'No messages yet';
+                    user = item.otherParticipant || item.participants?.find(p => p._id !== currentUser.id);
                     unreadCount = item.unreadCount || 0;
-                } else if (type === 'friends') {
+                } else {
                     user = item;
-                    lastMessage = `@${user.username}`;
-                    unreadCount = 0;
                 }
                 
                 if (!user) return;
@@ -1800,11 +1293,11 @@
                 div.innerHTML = `
                     <div class="list-avatar">
                         ${user.avatar ? `<img src="${user.avatar}">` : `<i class="fas fa-user"></i>`}
-                        <div class="list-status status-${user.status || 'offline'}"></div>
+                        <div class="list-status status-${user.status === 'online' ? 'online' : 'offline'}"></div>
                     </div>
                     <div class="list-content">
-                        <h4>${user.name || 'Unknown User'} <small>@${user.username}</small></h4>
-                        <p>${lastMessage}</p>
+                        <div class="list-name">${user.name || 'Unknown'}</div>
+                        <div class="list-username">@${user.username}</div>
                     </div>
                     ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
                 `;
@@ -1821,7 +1314,7 @@
             });
         }
         
-        // ===== SEARCH FUNCTIONALITY =====
+        // ===== SEARCH =====
         async function searchUsers(query) {
             if (!query || query.trim().length < 2) {
                 switchTab('find');
@@ -1841,12 +1334,10 @@
                 const users = await res.json();
                 renderSearchResults(users);
             } catch (error) {
-                console.error('Search error:', error);
                 document.getElementById('list-container').innerHTML = `
-                    <div class="empty-state" style="height: auto; padding: 40px 20px;">
+                    <div style="padding: 40px 20px; text-align: center; color: var(--danger);">
                         <i class="fas fa-exclamation-circle"></i>
-                        <h3>Search Failed</h3>
-                        <p>${error.message}</p>
+                        <p>Search failed: ${error.message}</p>
                     </div>
                 `;
             }
@@ -1855,12 +1346,11 @@
         function renderSearchResults(users) {
             const container = document.getElementById('list-container');
             
-            if (users.length === 0) {
+            if (!users || users.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state" style="height: auto; padding: 40px 20px;">
+                    <div style="padding: 40px 20px; text-align: center; color: var(--text-muted);">
                         <i class="fas fa-user-slash"></i>
-                        <h3>No Users Found</h3>
-                        <p>Try searching with a different username or name</p>
+                        <p>No users found</p>
                     </div>
                 `;
                 return;
@@ -1876,19 +1366,19 @@
                 div.innerHTML = `
                     <div class="list-avatar">
                         ${user.avatar ? `<img src="${user.avatar}">` : `<i class="fas fa-user"></i>`}
-                        <div class="list-status status-${user.status || 'offline'}"></div>
+                        <div class="list-status status-${user.status === 'online' ? 'online' : 'offline'}"></div>
                     </div>
                     <div class="list-content">
-                        <h4>${user.name} <small>@${user.username}</small></h4>
-                        <p>${user.email || 'No email provided'}</p>
+                        <div class="list-name">${user.name}</div>
+                        <div class="list-username">@${user.username}</div>
                     </div>
-                    <div class="icon-btn" onclick="sendFriendRequest('${user._id}')" style="transform: scale(0.9);">
+                    <div class="action-btn" onclick="sendFriendRequest('${user._id}')" style="transform: scale(0.9);">
                         <i class="fas fa-user-plus"></i>
                     </div>
                 `;
                 
                 div.addEventListener('click', (e) => {
-                    if (!e.target.closest('.icon-btn')) {
+                    if (!e.target.closest('.action-btn')) {
                         handleFindUserClick(user);
                     }
                 });
@@ -1898,13 +1388,12 @@
         }
         
         async function handleFindUserClick(user) {
-            // Check relationship status
             const status = await checkUserStatus(user._id);
             
             if (status === 'friend') {
                 openChat(user, null);
             } else if (status === 'request_sent') {
-                alert('Friend request already sent to this user');
+                alert(`Friend request already sent to ${user.name}`);
             } else if (status === 'request_received') {
                 const accept = confirm(`Accept friend request from ${user.name}?`);
                 if (accept) {
@@ -1918,7 +1407,7 @@
             }
         }
         
-        // ===== CHAT FUNCTIONS =====
+        // ===== CHAT =====
         async function openChat(user, chatId = null) {
             currentChatUser = user;
             
@@ -1926,19 +1415,17 @@
             document.getElementById('empty-chat-placeholder').style.display = 'none';
             document.getElementById('chat-area').style.display = 'flex';
             
+            // Mobile: hide sidebar
             if (window.innerWidth <= 768) {
                 document.querySelector('.sidebar').style.display = 'none';
-                document.getElementById('back-btn').style.display = 'flex';
             }
             
             document.getElementById('chat-header-name').textContent = user.name;
-            document.getElementById('chat-header-status').innerHTML = `
-                <span class="online-status"></span> ${user.status || 'Offline'}
-            `;
+            document.getElementById('chat-header-status').textContent = user.status === 'online' ? 'Online' : 'Offline';
             
-            const avatarDiv = document.getElementById('chat-header-avatar');
-            avatarDiv.innerHTML = user.avatar ? 
-                `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;">` :
+            const avatar = document.getElementById('chat-header-avatar');
+            avatar.innerHTML = user.avatar ? 
+                `<img src="${user.avatar}">` : 
                 `<i class="fas fa-user"></i>`;
             
             document.getElementById('messages').innerHTML = '';
@@ -1949,7 +1436,7 @@
                 if (chatId) {
                     currentChatId = chatId;
                 } else {
-                    // Get or create chat
+                    // Create or get chat
                     const res = await fetch(`${API}/chats`, {
                         method: 'POST',
                         headers: { 
@@ -1959,7 +1446,10 @@
                         body: JSON.stringify({ userId: user._id })
                     });
                     
-                    if (!res.ok) throw new Error('Failed to create chat');
+                    if (!res.ok) {
+                        const error = await res.json();
+                        throw new Error(error.error);
+                    }
                     
                     const chat = await res.json();
                     currentChatId = chat._id;
@@ -1975,11 +1465,15 @@
                 
                 if (msgRes.ok) {
                     const messages = await msgRes.json();
-                    messages.forEach(msg => appendMessage(msg));
+                    messages.forEach(msg => {
+                        // Fix: Check if message is from current user
+                        const isMe = msg.sender._id === currentUser.id;
+                        appendMessage(msg, isMe);
+                    });
                     scrollToBottom();
                 }
                 
-                // Mark messages as seen
+                // Mark as read
                 socket.emit('message_seen', { chatId: currentChatId });
                 
             } catch (error) {
@@ -1997,7 +1491,6 @@
             
             if (window.innerWidth <= 768) {
                 document.querySelector('.sidebar').style.display = 'flex';
-                document.getElementById('back-btn').style.display = 'none';
             }
         }
         
@@ -2008,12 +1501,25 @@
             
             if (!text || !currentChatId) return;
             
-            input.value = '';
-            adjustTextareaHeight(input);
-            
-            // Clear typing indicator
+            // Clear typing
             clearTimeout(typingTimeout);
             socket.emit('typing_stopped', { chatId: currentChatId });
+            
+            // Optimistic update
+            const tempId = 'temp-' + Date.now();
+            const tempMsg = {
+                _id: tempId,
+                text: text,
+                sender: { _id: currentUser.id, name: currentUser.name },
+                createdAt: new Date().toISOString(),
+                status: 'sending'
+            };
+            
+            // FIX: Append as sent message
+            appendMessage(tempMsg, true);
+            input.value = '';
+            adjustTextareaHeight(input);
+            scrollToBottom();
             
             try {
                 const res = await fetch(`${API}/messages`, {
@@ -2030,49 +1536,71 @@
                 
                 if (!res.ok) {
                     const error = await res.json();
-                    throw new Error(error.error || 'Failed to send message');
+                    throw new Error(error.error);
                 }
                 
                 const message = await res.json();
-                appendMessage(message);
-                scrollToBottom();
+                
+                // Replace temp message
+                const tempElement = document.getElementById(`msg-${tempId}`);
+                if (tempElement) {
+                    tempElement.id = `msg-${message._id}`;
+                    const timeElement = tempElement.querySelector('.msg-time');
+                    if (timeElement) {
+                        timeElement.innerHTML = formatTime(message.createdAt) + 
+                            '<span class="msg-status">?</span>';
+                    }
+                }
                 
             } catch (error) {
                 console.error('Send message error:', error);
-                alert('Failed to send message: ' + error.message);
+                const tempElement = document.getElementById(`msg-${tempId}`);
+                if (tempElement) {
+                    tempElement.style.opacity = '0.5';
+                    const timeElement = tempElement.querySelector('.msg-time');
+                    if (timeElement) {
+                        timeElement.innerHTML = formatTime(tempMsg.createdAt) + 
+                            '<span class="msg-status" style="color: var(--danger);">?</span>';
+                    }
+                }
             }
         }
         
-        function appendMessage(msg) {
+        function appendMessage(msg, isMe = null) {
+            if (isMe === null) {
+                isMe = msg.sender._id === currentUser.id;
+            }
+            
             const messagesDiv = document.getElementById('messages');
-            const isMe = msg.sender._id === currentUser.id;
+            const div = document.createElement('div');
+            div.className = `msg ${isMe ? 'sent' : 'received'}`;
+            div.id = `msg-${msg._id}`;
             
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `msg ${isMe ? 'sent' : 'received'}`;
-            messageDiv.id = `msg-${msg._id}`;
+            const time = formatTime(msg.createdAt);
+            const statusIcon = msg.status === 'read' ? '??' : 
+                              msg.status === 'delivered' ? '??' : 
+                              msg.status === 'sent' ? '?' : 
+                              msg.status === 'sending' ? '...' : '';
             
-            const time = new Date(msg.createdAt).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            
-            const statusIcon = isMe ? 
-                (msg.status === 'read' ? '<i class="fas fa-check-double" style="color: #3b82f6;"></i>' :
-                 msg.status === 'delivered' ? '<i class="fas fa-check-double"></i>' :
-                 '<i class="fas fa-check"></i>') : '';
-            
-            messageDiv.innerHTML = `
+            div.innerHTML = `
                 <div class="msg-text">${escapeHtml(msg.text)}</div>
-                <div class="msg-time">
-                    ${time}
-                    <span class="msg-status">${statusIcon}</span>
-                </div>
+                <div class="msg-time">${time} <span class="msg-status">${statusIcon}</span></div>
             `;
             
-            messagesDiv.appendChild(messageDiv);
+            messagesDiv.appendChild(div);
         }
         
-        function handleEnter(event) {
+        function updateMessageStatus(messageId, status) {
+            const msgElement = document.getElementById(`msg-${messageId}`);
+            if (msgElement) {
+                const statusElement = msgElement.querySelector('.msg-status');
+                if (statusElement) {
+                    statusElement.textContent = status === 'read' ? '??' : '?';
+                }
+            }
+        }
+        
+        function handleKeyDown(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 sendMessage();
@@ -2083,7 +1611,6 @@
             if (!currentChatId) return;
             
             clearTimeout(typingTimeout);
-            
             socket.emit('typing', { 
                 chatId: currentChatId, 
                 userName: currentUser.name 
@@ -2093,13 +1620,22 @@
                 socket.emit('typing_stopped', { chatId: currentChatId });
             }, 2000);
             
-            // Auto-resize textarea
             adjustTextareaHeight(event.target);
         }
         
         function adjustTextareaHeight(textarea) {
             textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+        }
+        
+        function showTypingIndicator(userName) {
+            const indicator = document.getElementById('typing-indicator');
+            document.getElementById('typing-text').textContent = `${userName} is typing...`;
+            indicator.style.display = 'block';
+        }
+        
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'none';
         }
         
         // ===== FRIEND REQUESTS =====
@@ -2118,7 +1654,7 @@
                 
                 if (!res.ok) {
                     const error = await res.json();
-                    throw new Error(error.error || 'Failed to send request');
+                    throw new Error(error.error);
                 }
                 
                 alert('Friend request sent successfully!');
@@ -2129,221 +1665,107 @@
             }
         }
         
-        async function loadFriendRequests() {
+        async function checkUserStatus(userId) {
             try {
-                const res = await fetch(`${API}/friend-requests/received`, {
+                // Check if already friends
+                const friendsRes = await fetch(`${API}/friends`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                const friends = await friendsRes.json();
+                if (friends.some(f => f._id === userId)) return 'friend';
                 
-                if (res.ok) {
-                    const requests = await res.json();
-                    updateNotificationBadge(requests.length);
-                }
+                // Check sent requests
+                const sentRes = await fetch(`${API}/friend-requests/sent`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const sentRequests = await sentRes.json();
+                if (sentRequests.some(r => r.receiver._id === userId)) return 'request_sent';
+                
+                // Check received requests
+                const receivedRes = await fetch(`${API}/friend-requests/received`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const receivedRequests = await receivedRes.json();
+                if (receivedRequests.some(r => r.sender._id === userId)) return 'request_received';
+                
+                return 'none';
             } catch (error) {
-                console.error('Load friend requests error:', error);
+                return 'none';
             }
         }
         
-        async function showFriendRequests() {
+        async function acceptFriendRequest(userId) {
             try {
+                // Find request
                 const res = await fetch(`${API}/friend-requests/received`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 const requests = await res.json();
-                const list = document.getElementById('friend-requests-list');
-                list.innerHTML = '';
+                const request = requests.find(r => r.sender._id === userId);
                 
-                if (requests.length === 0) {
-                    list.innerHTML = `
-                        <div class="empty-state" style="height: auto; padding: 40px 20px;">
-                            <i class="fas fa-user-plus"></i>
-                            <h3>No Friend Requests</h3>
-                            <p>You don't have any pending friend requests</p>
-                        </div>
-                    `;
-                } else {
-                    requests.forEach(request => {
-                        const div = document.createElement('div');
-                        div.className = 'list-item';
-                        div.innerHTML = `
-                            <div class="list-avatar">
-                                ${request.sender.avatar ? `<img src="${request.sender.avatar}">` : '<i class="fas fa-user"></i>'}
-                            </div>
-                            <div class="list-content">
-                                <h4>${request.sender.name} <small>@${request.sender.username}</small></h4>
-                                <p>Sent ${formatTimeAgo(request.createdAt)}</p>
-                            </div>
-                            <div style="display: flex; gap: 10px;">
-                                <button class="icon-btn" style="background: var(--success); color: white;" 
-                                        onclick="handleFriendRequest('${request._id}', 'accept')" title="Accept">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="icon-btn" style="background: var(--danger); color: white;" 
-                                        onclick="handleFriendRequest('${request._id}', 'reject')" title="Reject">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        `;
-                        list.appendChild(div);
-                    });
-                }
+                if (!request) throw new Error('Request not found');
                 
-                updateNotificationBadge(0);
-                document.getElementById('friend-requests-modal').classList.add('active');
-                
-            } catch (error) {
-                console.error('Show friend requests error:', error);
-                alert('Failed to load friend requests');
-            }
-        }
-        
-        async function handleFriendRequest(requestId, action) {
-            try {
-                const res = await fetch(`${API}/friend-requests/${requestId}/${action}`, {
+                await fetch(`${API}/friend-requests/${request._id}/accept`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                if (!res.ok) throw new Error('Failed to process request');
-                
-                // Refresh the list
-                showFriendRequests();
-                
-                // Refresh friends list if accepted
-                if (action === 'accept') {
-                    refreshFriendsList();
-                }
-                
-            } catch (error) {
-                alert('Failed to process request: ' + error.message);
-            }
-        }
-        
-        // ===== BLOCKED USERS =====
-        async function showBlockedUsers() {
-            try {
-                const res = await fetch(`${API}/blocked-users`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                const blockedUsers = await res.json();
-                const list = document.getElementById('blocked-users-list');
-                list.innerHTML = '';
-                
-                if (blockedUsers.length === 0) {
-                    list.innerHTML = `
-                        <div class="empty-state" style="height: auto; padding: 40px 20px;">
-                            <i class="fas fa-user-slash"></i>
-                            <h3>No Blocked Users</h3>
-                            <p>You haven't blocked any users</p>
-                        </div>
-                    `;
-                } else {
-                    blockedUsers.forEach(user => {
-                        const div = document.createElement('div');
-                        div.className = 'list-item';
-                        div.innerHTML = `
-                            <div class="list-avatar">
-                                ${user.avatar ? `<img src="${user.avatar}">` : '<i class="fas fa-user"></i>'}
-                            </div>
-                            <div class="list-content">
-                                <h4>${user.name} <small>@${user.username}</small></h4>
-                                <p>Blocked since ${formatDate(user.createdAt)}</p>
-                            </div>
-                            <button class="icon-btn" onclick="unblockUser('${user._id}')" title="Unblock">
-                                <i class="fas fa-user-check"></i>
-                            </button>
-                        `;
-                        list.appendChild(div);
-                    });
-                }
-                
-                document.getElementById('blocked-users-modal').classList.add('active');
-                
-            } catch (error) {
-                console.error('Show blocked users error:', error);
-                alert('Failed to load blocked users');
-            }
-        }
-        
-        async function blockUser() {
-            if (!currentChatUser || !confirm(`Block ${currentChatUser.name}? They won't be able to message or send friend requests.`)) {
-                return;
-            }
-            
-            try {
-                const res = await fetch(`${API}/users/block/${currentChatUser._id}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (!res.ok) throw new Error('Failed to block user');
-                
-                alert('User blocked successfully');
-                closeChat();
+                alert('Friend request accepted!');
                 switchTab('friends');
                 
             } catch (error) {
-                alert('Failed to block user: ' + error.message);
+                alert('Failed to accept request: ' + error.message);
             }
         }
         
-        async function unblockUser(userId) {
-            if (!confirm('Unblock this user?')) return;
-            
-            try {
-                const res = await fetch(`${API}/users/block/${userId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (!res.ok) throw new Error('Failed to unblock user');
-                
-                alert('User unblocked successfully');
-                showBlockedUsers();
-                
-            } catch (error) {
-                alert('Failed to unblock user: ' + error.message);
-            }
-        }
-        
-        // ===== ACCOUNT MANAGEMENT =====
+        // ===== PROFILE =====
         function openMyProfile() {
             if (!currentUser) return;
             
-            document.getElementById('edit-username').value = currentUser.username || '';
-            document.getElementById('edit-name').value = currentUser.name || '';
-            document.getElementById('edit-email').value = currentUser.email || '';
-            
-            const avatarPreview = document.getElementById('edit-avatar-preview');
-            const avatarIcon = document.getElementById('edit-avatar-icon');
-            
-            if (currentUser.avatar) {
-                avatarPreview.src = currentUser.avatar;
-                avatarPreview.style.display = 'block';
-                avatarIcon.style.display = 'none';
-            } else {
-                avatarPreview.style.display = 'none';
-                avatarIcon.style.display = 'block';
-            }
+            document.getElementById('edit-username').value = currentUser.username;
+            document.getElementById('edit-name').value = currentUser.name;
+            document.getElementById('edit-email').value = currentUser.email;
             
             document.getElementById('my-profile-modal').classList.add('active');
         }
         
-        function previewAvatar(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const avatarPreview = document.getElementById('edit-avatar-preview');
-                    avatarPreview.src = e.target.result;
-                    avatarPreview.style.display = 'block';
-                    document.getElementById('edit-avatar-icon').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
+        document.getElementById('profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('edit-name').value);
+            formData.append('currentPassword', document.getElementById('edit-password').value);
+            
+            const newPassword = document.getElementById('new-password').value;
+            if (newPassword) {
+                formData.append('newPassword', newPassword);
             }
-        }
+            
+            try {
+                const res = await fetch(`${API}/profile`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.error);
+                }
+                
+                const data = await res.json();
+                currentUser = data.user;
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                document.getElementById('my-name').textContent = currentUser.name;
+                
+                closeModal('my-profile-modal');
+                alert('Profile updated successfully!');
+                
+            } catch (error) {
+                alert('Failed to update profile: ' + error.message);
+            }
+        });
         
         function showDeleteAccountModal() {
             closeModal('my-profile-modal');
@@ -2353,11 +1775,11 @@
         async function deleteAccount() {
             const password = document.getElementById('delete-password').value;
             if (!password) {
-                alert('Please enter your password to confirm deletion');
+                alert('Please enter your password');
                 return;
             }
             
-            if (!confirm('Are you absolutely sure? This action cannot be undone!')) {
+            if (!confirm('Are you absolutely sure? This cannot be undone!')) {
                 return;
             }
             
@@ -2373,7 +1795,7 @@
                 
                 if (!res.ok) {
                     const error = await res.json();
-                    throw new Error(error.error || 'Failed to delete account');
+                    throw new Error(error.error);
                 }
                 
                 alert('Account deleted successfully');
@@ -2384,30 +1806,16 @@
             }
         }
         
-        // ===== UTILITY FUNCTIONS =====
+        // ===== UTILS =====
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
         
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString();
-        }
-        
-        function formatTimeAgo(dateString) {
-            const now = new Date();
+        function formatTime(dateString) {
             const date = new Date(dateString);
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 1) return 'just now';
-            if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-            if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-            if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-            return formatDate(dateString);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
         
         function scrollToBottom() {
@@ -2445,33 +1853,6 @@
             }
         }
         
-        function updateUserStatus(userId, status) {
-            if (currentChatUser && currentChatUser._id === userId) {
-                const statusText = status === 'online' ? 'Online' : 'Offline';
-                document.getElementById('chat-header-status').innerHTML = `
-                    <span class="online-status" style="background: ${status === 'online' ? 'var(--success)' : 'var(--text-muted)'}"></span>
-                    ${statusText}
-                `;
-            }
-            
-            // Update status in lists
-            document.querySelectorAll('.list-item[data-user-id]').forEach(item => {
-                const itemUserId = item.getAttribute('data-user-id');
-                if (itemUserId === userId) {
-                    const statusDot = item.querySelector('.list-status');
-                    if (statusDot) {
-                        statusDot.className = `list-status status-${status}`;
-                    }
-                }
-            });
-        }
-        
-        function refreshFriendsList() {
-            if (document.querySelector('.nav-tab[data-tab="friends"]').classList.contains('active')) {
-                switchTab('friends');
-            }
-        }
-        
         function refreshChatList() {
             if (document.querySelector('.nav-tab[data-tab="chats"]').classList.contains('active')) {
                 switchTab('chats');
@@ -2485,75 +1866,26 @@
             }
         }
         
-        function showError(message) {
-            const errorMsg = document.getElementById('error-msg');
-            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-            errorMsg.classList.remove('hidden');
-            document.getElementById('success-msg').classList.add('hidden');
+        function viewChatProfile() {
+            if (!currentChatUser) return;
+            alert(`Profile:\n\nName: ${currentChatUser.name}\nUsername: @${currentChatUser.username}\nStatus: ${currentChatUser.status || 'Offline'}`);
         }
         
-        function showSuccess(message) {
-            const successMsg = document.getElementById('success-msg');
-            successMsg.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-            successMsg.classList.remove('hidden');
-            document.getElementById('error-msg').classList.add('hidden');
-        }
-        
-        function showNotification(title, message) {
-            if (Notification.permission === 'granted') {
-                new Notification(title, {
-                    body: message,
-                    icon: '/favicon.ico'
-                });
-            }
-        }
-        
-        async function checkUserStatus(userId) {
+        async function blockUser() {
+            if (!currentChatUser || !confirm(`Block ${currentChatUser.name}?`)) return;
+            
             try {
-                // Check if already friends
-                const friendsRes = await fetch(`${API}/friends`, {
+                await fetch(`${API}/users/block/${currentChatUser._id}`, {
+                    method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                const friends = await friendsRes.json();
-                if (friends.some(f => f._id === userId)) return 'friend';
                 
-                // Check received requests
-                const receivedRes = await fetch(`${API}/friend-requests/received`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const receivedRequests = await receivedRes.json();
-                if (receivedRequests.some(r => r.sender._id === userId)) return 'request_received';
+                alert('User blocked successfully');
+                closeChat();
+                switchTab('friends');
                 
-                // Check sent requests
-                const sentRes = await fetch(`${API}/friend-requests/sent`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const sentRequests = await sentRes.json();
-                if (sentRequests.some(r => r.receiver._id === userId)) return 'request_sent';
-                
-                return 'none';
             } catch (error) {
-                console.error('Check user status error:', error);
-                return 'none';
-            }
-        }
-        
-        async function acceptFriendRequest(userId) {
-            try {
-                // Find the request ID
-                const res = await fetch(`${API}/friend-requests/received`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const requests = await res.json();
-                const request = requests.find(r => r.sender._id === userId);
-                
-                if (!request) {
-                    throw new Error('Request not found');
-                }
-                
-                await handleFriendRequest(request._id, 'accept');
-            } catch (error) {
-                alert('Failed to accept request: ' + error.message);
+                alert('Failed to block user: ' + error.message);
             }
         }
         
@@ -2561,12 +1893,10 @@
             if (!currentChatUser || !confirm(`Remove ${currentChatUser.name} from friends?`)) return;
             
             try {
-                const res = await fetch(`${API}/friends/${currentChatUser._id}`, {
+                await fetch(`${API}/friends/${currentChatUser._id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
-                if (!res.ok) throw new Error('Failed to remove friend');
                 
                 alert('Friend removed successfully');
                 closeChat();
@@ -2577,35 +1907,25 @@
             }
         }
         
-        function viewChatProfile() {
-            if (!currentChatUser) return;
-            
-            alert(`Profile View for ${currentChatUser.name}\n\nUsername: @${currentChatUser.username}\nStatus: ${currentChatUser.status || 'Offline'}`);
-        }
-        
-        function toggleEmoji() {
-            alert('Emoji picker would open here');
-        }
-        
         function logout() {
-            if (socket) {
-                socket.disconnect();
-            }
+            if (socket) socket.disconnect();
             localStorage.clear();
-            window.location.reload();
+            location.reload();
         }
+        
+        function showNotification(title, message) {
+            if (Notification.permission === 'granted') {
+                new Notification(title, { body: message });
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initAuth);
         
         // Request notification permission
         if (Notification.permission === 'default') {
             Notification.requestPermission();
         }
-        
-        // Close modals when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) {
-                e.target.classList.remove('active');
-            }
-        });
     </script>
 </body>
 </html>
