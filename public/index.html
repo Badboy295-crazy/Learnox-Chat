@@ -1,197 +1,589 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Chat App</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learnox Pro - Secure Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* ===== STYLES (Clean & Dark Mode) ===== */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4338ca;
+            --bg-dark: #111827;
+            --bg-card: #1f2937;
+            --bg-input: #374151;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: #4b5563;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
 
-<style>
-body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
-.hidden{display:none}
-button{cursor:pointer}
-.sidebar{width:300px;background:#020617;height:100vh;overflow:auto}
-.chat{flex:1;display:flex;flex-direction:column}
-.container{display:flex;height:100vh}
-.list-item{padding:10px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px;cursor:pointer}
-.list-item:hover{background:#020617}
-.msg{margin:5px;padding:10px;border-radius:10px;max-width:70%}
-.sent{background:#2563eb;align-self:flex-end}
-.received{background:#1e293b}
-#messages{flex:1;overflow:auto;padding:10px}
-input,textarea{width:100%;padding:10px;background:#020617;color:white;border:none}
-</style>
+        /* AUTH SCREEN */
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .logo { font-size: 2rem; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 0.5rem; }
+        .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 2rem; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+        .form-control {
+            width: 100%; padding: 0.8rem; background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: 6px; color: white; outline: none; transition: 0.3s;
+        }
+        .form-control:focus { border-color: var(--primary); }
+
+        .btn {
+            width: 100%; padding: 0.9rem; background: var(--primary); color: white; border: none;
+            border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 1rem;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .auth-switch { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; }
+        .auth-switch a { color: var(--primary); text-decoration: none; cursor: pointer; }
+
+        /* APP LAYOUT */
+        .app-container {
+            display: none; width: 100vw; height: 100vh; display: flex;
+        }
+        
+        /* SIDEBAR */
+        .sidebar {
+            width: 350px; background: var(--bg-card); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+        }
+        
+        .user-header { padding: 1.5rem; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: space-between; }
+        .my-info { display: flex; align-items: center; gap: 10px; }
+        .avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--primary); }
+        
+        .nav-tabs { display: flex; border-bottom: 1px solid var(--border); }
+        .nav-tab { flex: 1; padding: 1rem; text-align: center; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
+        .nav-tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); background: rgba(99, 102, 241, 0.1); }
+        
+        .list-container { flex: 1; overflow-y: auto; }
+        .list-item {
+            padding: 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .list-item:hover { background: var(--bg-input); }
+        .item-info { flex: 1; }
+        .item-name { font-weight: 600; font-size: 1rem; }
+        .item-sub { font-size: 0.85rem; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 200px;}
+        
+        /* CHAT AREA */
+        .chat-area { flex: 1; background: var(--bg-dark); display: flex; flex-direction: column; position: relative; }
+        
+        .chat-header {
+            padding: 1rem 1.5rem; background: var(--bg-card); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 15px;
+        }
+        .chat-messages { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        
+        .message { max-width: 70%; padding: 10px 15px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; position: relative; }
+        .msg-sent { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        .msg-received { align-self: flex-start; background: var(--bg-input); color: var(--text-main); border-bottom-left-radius: 2px; }
+        .msg-time { font-size: 0.7rem; opacity: 0.7; text-align: right; margin-top: 4px; display: block; }
+
+        .chat-input-area {
+            padding: 1rem; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; gap: 10px;
+        }
+        .chat-input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; }
+        .send-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .hidden { display: none !important; }
+        .error-msg { color: var(--danger); text-align: center; margin-bottom: 10px; font-size: 0.9rem; }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; display: flex; }
+            .chat-area { display: none; width: 100%; position: absolute; z-index: 10; height: 100%; }
+            .chat-area.active { display: flex; }
+            .sidebar.hidden-mobile { display: none; }
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- AUTH -->
-<div id="auth-box">
-  <h2>Login</h2>
-  <input id="login-user" placeholder="Username or Email">
-  <input id="login-pass" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-  <p id="auth-error"></p>
-</div>
+    <div class="auth-container" id="auth-box">
+        <div class="logo"><i class="fas fa-bolt"></i> Learnox Pro</div>
+        <div class="subtitle">Real-time Secure Chat</div>
+        
+        <div id="auth-error" class="error-msg hidden"></div>
 
-<!-- APP -->
-<div id="app-box" class="hidden">
-  <div class="container">
+        <form id="auth-form">
+            <div class="form-group hidden" id="group-username">
+                <label class="form-label">Username</label>
+                <input type="text" id="reg-username" class="form-control" placeholder="Choose a username">
+            </div>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <button onclick="loadFriends()">Friends</button>
-      <button onclick="loadChats()">Chats</button>
-      <button onclick="logout()">Logout</button>
-      <div id="list"></div>
+            <div class="form-group hidden" id="group-name">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="reg-name" class="form-control" placeholder="Your full name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="auth-email" class="form-control" placeholder="name@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="auth-password" class="form-control" placeholder="Enter password" required>
+            </div>
+
+            <button type="submit" class="btn" id="submit-btn">Login</button>
+        </form>
+
+        <div class="auth-switch">
+            <span id="switch-text">New here?</span> 
+            <a onclick="toggleAuthMode()" id="switch-link">Create Account</a>
+        </div>
     </div>
 
-    <!-- CHAT -->
-    <div class="chat">
-      <div id="messages"></div>
-      <textarea id="msg" placeholder="Type message"></textarea>
-      <button onclick="sendMessage()">Send</button>
+    <div class="app-container hidden" id="app-box">
+        
+        <div class="sidebar" id="sidebar">
+            <div class="user-header">
+                <div class="my-info">
+                    <img src="" id="my-avatar" class="avatar-small">
+                    <div>
+                        <div style="font-weight: bold;" id="my-name">User</div>
+                        <div style="font-size: 0.8rem; color: var(--success);">? Online</div>
+                    </div>
+                </div>
+                <button onclick="logout()" style="background:none; border:none; color: var(--danger); cursor:pointer;"><i class="fas fa-sign-out-alt fa-lg"></i></button>
+            </div>
+
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="setTab('chats')" id="tab-chats">Chats</div>
+                <div class="nav-tab" onclick="setTab('friends')" id="tab-friends">Friends</div>
+                <div class="nav-tab" onclick="setTab('search')" id="tab-search">Search</div>
+            </div>
+
+            <div id="search-bar-container" class="hidden" style="padding: 10px;">
+                <input type="text" id="user-search-input" class="form-control" placeholder="Search users..." oninput="searchUsers(this.value)">
+            </div>
+
+            <div class="list-container" id="list-container">
+                </div>
+        </div>
+
+        <div class="chat-area" id="chat-window">
+            <div class="chat-header" id="chat-header">
+                <button class="hidden" id="back-btn" onclick="closeChat()" style="background:none;border:none;color:white;margin-right:10px;"><i class="fas fa-arrow-left"></i></button>
+                <img src="" id="chat-avatar" class="avatar-small">
+                <div>
+                    <div class="item-name" id="chat-name">Select a user</div>
+                    <div class="item-sub" id="chat-status"></div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="messages-list">
+                <div style="text-align: center; color: var(--text-muted); margin-top: 50px;">
+                    Select a chat to start messaging
+                </div>
+            </div>
+
+            <div class="chat-input-area hidden" id="input-area">
+                <input type="text" id="msg-input" class="chat-input" placeholder="Type a message..." onkeypress="handleEnter(event)">
+                <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
     </div>
 
-  </div>
-</div>
+    <script>
+        const API_URL = '/api';
+        let isRegister = false;
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+        let socket = null;
+        let currentChatId = null;
 
-<script>
-const API = "/api";
-let token = localStorage.getItem("token");
-let currentUser = JSON.parse(localStorage.getItem("user"));
-let socket = null;
-let currentChatId = null;
+        // ===== INITIALIZATION =====
+        window.onload = () => {
+            if(token) {
+                verifyToken();
+            } else {
+                showAuth();
+            }
+        };
 
-// ================= AUTH =================
-async function login(){
-  const username = login-user.value;
-  const password = login-pass.value;
+        async function verifyToken() {
+            try {
+                const res = await fetch(`${API_URL}/verify-token`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if(res.ok && data.valid) {
+                    currentUser = data.user;
+                    initApp();
+                } else {
+                    logout();
+                }
+            } catch (e) { logout(); }
+        }
 
-  const res = await fetch(API + "/login",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ username, password })
-  });
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
 
-  const data = await res.json();
-  if(!res.ok){
-    auth-error.textContent = data.error;
-    return;
-  }
+        // ===== AUTH LOGIC =====
+        function toggleAuthMode() {
+            isRegister = !isRegister;
+            const title = document.getElementById('submit-btn');
+            const switchText = document.getElementById('switch-text');
+            const switchLink = document.getElementById('switch-link');
+            
+            if (isRegister) {
+                document.getElementById('group-username').classList.remove('hidden');
+                document.getElementById('group-name').classList.remove('hidden');
+                title.textContent = "Create Account";
+                switchText.textContent = "Already have an account?";
+                switchLink.textContent = "Login";
+            } else {
+                document.getElementById('group-username').classList.add('hidden');
+                document.getElementById('group-name').classList.add('hidden');
+                title.textContent = "Login";
+                switchText.textContent = "New here?";
+                switchLink.textContent = "Create Account";
+            }
+        }
 
-  token = data.token;
-  currentUser = data.user;
-  localStorage.setItem("token",token);
-  localStorage.setItem("user",JSON.stringify(data.user));
-  initApp();
-}
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errorDiv = document.getElementById('auth-error');
+            
+            const payload = { email, password };
+            let endpoint = '/login';
 
-// ================= INIT =================
-function initApp(){
-  auth-box.classList.add("hidden");
-  app-box.classList.remove("hidden");
+            if(isRegister) {
+                payload.username = document.getElementById('reg-username').value;
+                payload.name = document.getElementById('reg-name').value;
+                endpoint = '/register';
+            }
 
-  socket = io({
-    auth:{ token }
-  });
+            try {
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
 
-  socket.on("new_message",data=>{
-    if(data.chatId === currentChatId){
-      appendMessage(data.message,false);
-    }
-  });
+                if(!res.ok) throw new Error(data.error);
 
-  socket.on("typing",()=>{});
-  socket.on("typing_stopped",()=>{});
+                token = data.token;
+                localStorage.setItem('token', token);
+                currentUser = data.user;
+                initApp();
 
-  loadFriends();
-}
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove('hidden');
+            }
+        });
 
-if(token && currentUser) initApp();
+        function showAuth() {
+            document.getElementById('auth-box').classList.remove('hidden');
+            document.getElementById('app-box').classList.add('hidden');
+        }
 
-// ================= FRIENDS =================
-async function loadFriends(){
-  const res = await fetch(API+"/friends",{
-    headers:{ Authorization:`Bearer ${token}` }
-  });
-  const friends = await res.json();
-  renderList(friends,"friend");
-}
+        // ===== APP LOGIC =====
+        function initApp() {
+            document.getElementById('auth-box').classList.add('hidden');
+            document.getElementById('app-box').classList.remove('hidden');
+            document.getElementById('app-box').style.display = 'flex'; // Ensure flex
+            
+            // Set User Info
+            document.getElementById('my-name').textContent = currentUser.name;
+            document.getElementById('my-avatar').src = currentUser.avatar || 'https://ui-avatars.com/api/?name=' + currentUser.name;
 
-// ================= CHATS =================
-async function loadChats(){
-  const res = await fetch(API+"/chats",{
-    headers:{ Authorization:`Bearer ${token}` }
-  });
-  const chats = await res.json();
-  renderList(chats,"chat");
-}
+            // Connect Socket
+            socket = io({ auth: { token } });
+            
+            socket.on('new_message', (data) => {
+                if(currentChatId === data.chatId) {
+                    appendMessage(data.message);
+                    socket.emit('message_seen', { chatId: currentChatId });
+                } else {
+                    // Refresh chat list to show unread indicator (simplified)
+                    if(document.getElementById('tab-chats').classList.contains('active')) loadChats();
+                }
+            });
 
-// ================= RENDER =================
-function renderList(data,type){
-  list.innerHTML="";
-  data.forEach(item=>{
-    const div=document.createElement("div");
-    div.className="list-item";
+            setTab('chats');
+        }
 
-    let user = type==="chat" ? item.otherParticipant : item;
-    div.textContent = user.name || user.username;
+        // ===== TABS & NAVIGATION =====
+        function setTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
 
-    div.onclick=()=>{
-      openChat(user,item._id);
-    };
-    list.appendChild(div);
-  });
-}
+            const container = document.getElementById('list-container');
+            const searchBar = document.getElementById('search-bar-container');
+            container.innerHTML = '<div style="padding:20px; text-align:center;">Loading...</div>';
 
-// ================= CHAT =================
-async function openChat(user,chatId){
-  currentChatId = chatId;
-  messages.innerHTML="";
-}
+            if(tabName === 'chats') {
+                searchBar.classList.add('hidden');
+                loadChats();
+            } else if (tabName === 'friends') {
+                searchBar.classList.add('hidden');
+                loadFriends();
+            } else if (tabName === 'search') {
+                searchBar.classList.remove('hidden');
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:grey;">Type to find users...</div>';
+            }
+        }
 
-async function sendMessage(){
-  if(!currentChatId) return;
-  const text = msg.value.trim();
-  if(!text) return;
+        // ===== LOAD DATA =====
+        async function loadChats() {
+            const res = await fetch(`${API_URL}/chats`, { headers: { 'Authorization': `Bearer ${token}` }});
+            const chats = await res.json();
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
 
-  msg.value="";
+            if(chats.length === 0) container.innerHTML = '<div style="padding:20px; text-align:center;">No conversations yet.</div>';
 
-  const temp = {
-    _id:Date.now(),
-    text,
-    sender:{ _id:currentUser._id },
-    createdAt:new Date()
-  };
-  appendMessage(temp,true);
+            chats.forEach(chat => {
+                const el = document.createElement('div');
+                el.className = 'list-item';
+                const other = chat.otherParticipant;
+                const lastMsg = chat.lastMessage ? chat.lastMessage.text : 'No messages';
+                
+                el.innerHTML = `
+                    <img src="${other.avatar || 'https://ui-avatars.com/api/?name='+other.name}" class="avatar-small">
+                    <div class="item-info">
+                        <div class="item-name">${other.name}</div>
+                        <div class="item-sub">${lastMsg}</div>
+                    </div>
+                `;
+                el.onclick = () => openChat(chat._id, other);
+                container.appendChild(el);
+            });
+        }
 
-  const res = await fetch(API+"/messages",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:`Bearer ${token}`
-    },
-    body:JSON.stringify({ chatId:currentChatId,text })
-  });
-}
+        async function loadFriends() {
+            // Get friends
+            const friendsRes = await fetch(`${API_URL}/friends`, { headers: { 'Authorization': `Bearer ${token}` }});
+            const friends = await friendsRes.json();
+            
+            // Get Requests
+            const reqRes = await fetch(`${API_URL}/friend-requests/received`, { headers: { 'Authorization': `Bearer ${token}` }});
+            const requests = await reqRes.json();
 
-// ================= UI =================
-function appendMessage(msg,isMe){
-  const div=document.createElement("div");
-  div.className="msg "+(isMe?"sent":"received");
-  div.textContent=msg.text;
-  messages.appendChild(div);
-  messages.scrollTop=messages.scrollHeight;
-}
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
 
-// ================= LOGOUT =================
-function logout(){
-  localStorage.clear();
-  location.reload();
-}
-</script>
+            // Render Requests First
+            if(requests.length > 0) {
+                const reqHeader = document.createElement('div');
+                reqHeader.innerHTML = '<div style="padding:10px; font-weight:bold; color:var(--primary);">Friend Requests</div>';
+                container.appendChild(reqHeader);
+                
+                requests.forEach(req => {
+                    const el = document.createElement('div');
+                    el.className = 'list-item';
+                    el.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-name">${req.sender.name}</div>
+                            <div class="item-sub">Wants to be friends</div>
+                        </div>
+                        <button onclick="handleRequest('${req._id}', 'accept')" style="color:var(--success); border:none; background:none; font-weight:bold; margin-right:10px;">Accept</button>
+                        <button onclick="handleRequest('${req._id}', 'reject')" style="color:var(--danger); border:none; background:none;">Reject</button>
+                    `;
+                    container.appendChild(el);
+                });
+            }
 
+            // Render Friends
+            if(friends.length > 0) {
+                 const fHeader = document.createElement('div');
+                fHeader.innerHTML = '<div style="padding:10px; font-weight:bold; color:var(--text-muted);">Your Friends</div>';
+                container.appendChild(fHeader);
+
+                friends.forEach(f => {
+                    const el = document.createElement('div');
+                    el.className = 'list-item';
+                    el.innerHTML = `
+                        <img src="${f.avatar || 'https://ui-avatars.com/api/?name='+f.name}" class="avatar-small">
+                        <div class="item-info">
+                            <div class="item-name">${f.name}</div>
+                            <div class="item-sub">@${f.username}</div>
+                        </div>
+                        <button onclick="startChat('${f._id}')" class="btn" style="width:auto; padding:5px 10px; margin:0; font-size:0.8rem;">Chat</button>
+                    `;
+                    container.appendChild(el);
+                });
+            } else if (requests.length === 0) {
+                container.innerHTML = '<div style="padding:20px; text-align:center;">No friends yet. Go to Search!</div>';
+            }
+        }
+
+        // ===== CHAT FUNCTIONALITY =====
+        async function openChat(chatId, user) {
+            currentChatId = chatId;
+            
+            // UI Update
+            document.getElementById('chat-name').textContent = user.name;
+            document.getElementById('chat-status').textContent = user.status || 'Offline';
+            document.getElementById('chat-avatar').src = user.avatar || 'https://ui-avatars.com/api/?name='+user.name;
+            document.getElementById('input-area').classList.remove('hidden');
+            
+            // Mobile View
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden-mobile');
+                document.getElementById('chat-window').classList.add('active');
+                document.getElementById('back-btn').classList.remove('hidden');
+            }
+
+            // Load Messages
+            const res = await fetch(`${API_URL}/chats/${chatId}/messages`, { headers: { 'Authorization': `Bearer ${token}` }});
+            const messages = await res.json();
+            
+            const msgList = document.getElementById('messages-list');
+            msgList.innerHTML = '';
+            messages.forEach(appendMessage);
+            scrollToBottom();
+
+            // Join Room
+            socket.emit('join_chat', chatId);
+        }
+
+        async function startChat(friendId) {
+            const res = await fetch(`${API_URL}/chats`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ userId: friendId })
+            });
+            const chat = await res.json();
+            // Need the other user object
+            const other = chat.participants.find(p => p._id === friendId) || chat.participants.find(p => p !== currentUser._id);
+            // If data is just IDs (on creation), we might need to fetch user, but for now lets try:
+            // This is a simplification. Ideally the backend returns populated participants.
+            // Force reload chats to get the object
+            setTab('chats');
+        }
+
+        function appendMessage(msg) {
+            const list = document.getElementById('messages-list');
+            const div = document.createElement('div');
+            const isMe = msg.sender._id === currentUser.id || msg.sender === currentUser.id;
+            
+            div.className = `message ${isMe ? 'msg-sent' : 'msg-received'}`;
+            div.innerHTML = `
+                ${msg.text}
+                <span class="msg-time">${new Date(msg.createdAt || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            `;
+            list.appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const div = document.getElementById('messages-list');
+            div.scrollTop = div.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if(!text || !currentChatId) return;
+
+            input.value = '';
+            
+            // Optimistic UI
+            appendMessage({
+                text: text,
+                sender: { _id: currentUser.id },
+                createdAt: new Date()
+            });
+
+            try {
+                await fetch(`${API_URL}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ chatId: currentChatId, text })
+                });
+            } catch (e) {
+                console.error("Send failed");
+            }
+        }
+
+        function handleEnter(e) {
+            if(e.key === 'Enter') sendMessage();
+        }
+
+        function closeChat() {
+            document.getElementById('sidebar').classList.remove('hidden-mobile');
+            document.getElementById('chat-window').classList.remove('active');
+            currentChatId = null;
+        }
+
+        // ===== SEARCH & FRIENDS =====
+        async function searchUsers(query) {
+            if(query.length < 2) return;
+            const res = await fetch(`${API_URL}/users/search?q=${query}`, { headers: { 'Authorization': `Bearer ${token}` }});
+            const users = await res.json();
+            
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            
+            users.forEach(u => {
+                const el = document.createElement('div');
+                el.className = 'list-item';
+                el.innerHTML = `
+                    <img src="${u.avatar || 'https://ui-avatars.com/api/?name='+u.name}" class="avatar-small">
+                    <div class="item-info">
+                        <div class="item-name">${u.name}</div>
+                        <div class="item-sub">@${u.username}</div>
+                    </div>
+                    <button onclick="sendRequest('${u._id}')" class="btn" style="width:auto; padding:5px 10px; margin:0; font-size:0.8rem;">Add</button>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        async function sendRequest(id) {
+            const res = await fetch(`${API_URL}/friend-requests/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ receiverId: id })
+            });
+            if(res.ok) alert('Request Sent!');
+            else alert('Error or already sent');
+        }
+
+        async function handleRequest(reqId, action) {
+            const res = await fetch(`${API_URL}/friend-requests/${reqId}/${action}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if(res.ok) loadFriends(); // Refresh list
+        }
+
+    </script>
 </body>
 </html>
